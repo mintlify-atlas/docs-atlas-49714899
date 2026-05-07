@@ -1,0 +1,51 @@
+---
+title: "Power menu: shutdown, reboot, and lock"
+description: "Access NibrasShell's power menu to shut down, reboot, suspend, or log out — with a semi-transparent overlay and a confirmation step before any action."
+keywords: ["power menu", "shutdown", "reboot", "logout", "NibrasShell"]
+---
+
+The **Power Menu** is a full-screen overlay that gives you quick access to system power actions. It appears as a semi-transparent backdrop covering the entire desktop, with a centred card displaying four options. A confirmation step prevents accidental actions: you must confirm your choice before the shell executes the command. You can dismiss the menu at any point by pressing `Escape` or clicking anywhere outside the card.
+
+## Available actions
+
+| Action | What it does |
+|---|---|
+| **Shutdown** | Powers off the system immediately after confirmation. |
+| **Reboot** | Restarts the system after confirmation. |
+| **Suspend** | Suspends the system to RAM (sleep mode). |
+| **Logout** | Ends the current Hyprland session. |
+
+## How to open the power menu
+
+<Steps>
+  <Step title="From the LeftBar">
+    Click the **Power** icon at the bottom of the LeftBar icon strip. Unlike other LeftBar icons, this one does not open the side panel — it emits the `TOGGLE_POWER_MENU` event directly, which makes the `PowerMenuWindow` visible.
+  </Step>
+  <Step title="From a keyboard shortcut">
+    Bind the power menu to a key in your Hyprland config using the Quickshell IPC interface:
+
+    ```bash
+    bindd = $mainMod, l, Power options, exec, quickshell ipc call LeftBar togglePowerMenu
+    ```
+  </Step>
+</Steps>
+
+## Confirmation step
+
+After selecting an action, the power menu displays a confirmation dialog asking you to verify your choice. This prevents a mis-click from triggering an irreversible action. Click **Confirm** to proceed or **Cancel** to return to the option list.
+
+<Warning>
+  **Shutdown** and **Reboot** are irreversible. Make sure you have saved all open work before confirming either of these actions.
+</Warning>
+
+## Closing the menu
+
+You can exit the power menu without taking any action in three ways:
+
+- Press `Escape`.
+- Click anywhere on the semi-transparent backdrop outside the card.
+- Click **Cancel** in the confirmation dialog.
+
+<Note>
+  The `PowerMenuWindow` is created as a single global instance in `shell.qml` and its visibility is toggled by the `TOGGLE_POWER_MENU` event from `EventBus`. It is not tied to a specific monitor, so the overlay always appears on the focused screen.
+</Note>

@@ -1,0 +1,102 @@
+---
+title: "NibrasShell built-in Settings App: full section guide"
+description: "Tour every section of the NibrasShell Settings App — the visual interface that writes your ~/.nibrasshell.json and system theme config for you."
+keywords: ["settings app", "NibrasShell settings", "configuration UI", "openSettings", "GTK theme", "wallpaper"]
+---
+
+The **Settings App** is NibrasShell's built-in graphical configuration interface. Instead of editing `~/.nibrasshell.json` by hand, you open the Settings App, make your changes visually, and the app writes the file for you — no manual JSON editing required. It also handles system-level theming for GTK, Qt, Plasma, Kvantum, and Konsole in one place.
+
+<Tip>
+  To open the Settings App, trigger the `openSettings` shortcut (bound in your Hyprland config) or type `> Open Settings` in the shell launcher.
+</Tip>
+
+## Sections overview
+
+<AccordionGroup>
+  <Accordion title="General">
+    The **General** section covers the fundamentals of your identity and location.
+
+    - **User info** — Set your display name (`username`), subtitle, and profile picture path.
+    - **Location** — Configure your `city` and `country` for prayer time accuracy.
+    - **Weather** — Set the `weatherLocation` string used by the weather API and toggle weather display.
+    - **Prayer times** — Enable or disable Islamic prayer times (`usePrayerTimes`) and set the first day of your week (`firstDayOfWeek`).
+  </Accordion>
+
+  <Accordion title="Appearance">
+    The **Appearance** section gives you full control over how the shell looks.
+
+    - **Wallpapers** — Browse and apply static or dynamic wallpapers directly from the settings UI.
+    - **Dynamic colors** — Enable Material You color generation to automatically derive your entire color palette from the active wallpaper.
+    - **Color customization** — Fine-tune primary, accent, and surface colors independently of the wallpaper.
+    - **Fonts** — Choose font families and sizes for the shell UI.
+    - **Spacing and corners** — Adjust padding, margins, and border radius values to match your aesthetic.
+
+    <Note>
+      Some appearance sub-pages (such as advanced color overrides) are prototype screens and may not persist all values yet.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Desktop clock">
+    Configure the desktop clock widget displayed on your wallpaper:
+
+    - Toggle the clock on or off.
+    - Choose 12-hour or 24-hour format.
+    - Adjust font, size, and position on the desktop canvas.
+  </Accordion>
+
+  <Accordion title="System — network and resources">
+    The **System** section controls monitoring behavior and alert thresholds.
+
+    - **Network** — Select the network interface to monitor (`networkMonitor`) and set the polling interval (`networkInterval`).
+    - **Resource alerts** — Enable or disable high-load alerts for CPU, RAM, and temperature. Set threshold percentages and toggle alarm sounds for each resource.
+  </Accordion>
+
+  <Accordion title="AI">
+    The **AI** section is where you connect NibrasShell to an AI backend.
+
+    - **Provider** — Select your AI provider: `gemini`, `openai`, `deepseek`, `openrouter`, `ollama`, or `local`.
+    - **API keys** — Enter your primary key (`aiApiKey`) and optional per-feature keys for weather, music, and system monitoring.
+    - **Models** — Choose which model each feature uses (`weatherAiModel`, `musicAiModel`, `systemAiModel`).
+    - **Preferred language** — Set the language for all AI responses.
+    - **Personas** — Edit the system prompt persona for the weather assistant, music assistant, and system analyst using a built-in text editor.
+  </Accordion>
+
+  <Accordion title="Hardware — audio devices">
+    The **Hardware** section manages audio output and input devices via **Pipewire**.
+
+    - View all available audio sinks and sources.
+    - Set the default output and input device.
+    - Adjust per-device volume levels.
+  </Accordion>
+
+  <Accordion title="Hyprland integration">
+    Configure the Hyprland-specific behaviors that NibrasShell manages:
+
+    - Window gap and border settings passed to Hyprland.
+    - Workspace display options (`dynamicWorkspaces`, workspace icon sets).
+    - Top bar active window title width constraints.
+    - Menu layout style (`menuStyle`) and launcher position (`useBottomLauncher`).
+  </Accordion>
+
+  <Accordion title="System theming">
+    Apply a consistent visual theme across your entire desktop environment:
+
+    - **GTK** — Set GTK 3/4 theme and icon theme.
+    - **Qt** — Configure the Qt platform theme.
+    - **Plasma** — Apply KDE Plasma color schemes.
+    - **Konsole** — Set the Konsole terminal color profile.
+    - **Kvantum** — Choose a Kvantum theme for Qt applications.
+
+    <Tip>
+      Apply all themes at once from a single NibrasShell theme, so your GTK apps, terminal, and Qt apps all match without manual configuration.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+## How settings are saved
+
+Every change you make in the **Settings App** is written directly to `~/.nibrasshell.json`. NibrasShell watches this file at runtime and applies changes immediately — you do not need to restart the shell. System theme changes (GTK, Qt, etc.) are applied by running the relevant system commands in the background.
+
+<Note>
+  The install script also writes an initial `~/.nibrasshell.json` based on the choices you make during installation. You can re-run the installer or use the **Settings App** to update those choices at any time.
+</Note>

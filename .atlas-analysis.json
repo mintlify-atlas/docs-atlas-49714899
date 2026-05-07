@@ -1,0 +1,97 @@
+{
+  "projectType": "general",
+  "projectName": "NibrasShell",
+  "projectDescription": "A modern, AI-integrated Hyprland desktop shell built with QML/Quickshell, featuring dynamic theming, smart system monitoring, and a fully customizable UI.",
+  "theme": "palm",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "UI Components",
+            "pages": [
+              "components/overview",
+              "components/top-bar",
+              "components/left-menu",
+              "components/smart-capsule",
+              "components/desktop-wallpapers",
+              "components/notifications",
+              "components/app-launcher",
+              "components/power-menu"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/user-config",
+              "configuration/settings-app",
+              "configuration/shortcuts",
+              "configuration/cheatsheet"
+            ]
+          },
+          {
+            "group": "Theming",
+            "pages": [
+              "theming/themes-and-colors",
+              "theming/dynamic-colors",
+              "theming/wallpapers"
+            ]
+          },
+          {
+            "group": "AI & Services",
+            "pages": [
+              "services/ai-system-daemon",
+              "services/background-services",
+              "services/scripts-and-tools"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/architecture",
+              "reference/troubleshooting",
+              "reference/faq",
+              "reference/roadmap"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "AI System Daemon for autonomous CPU/RAM/temperature monitoring and root-cause analysis",
+    "Smart Capsule: interactive AI-powered island for weather, media, and system stats",
+    "Deep theming with Material 3 dynamic color generation from wallpapers",
+    "Support for GIF and video wallpapers with depth-effect overlays",
+    "Built-in Settings App for visual configuration without editing config files",
+    "Asynchronous QML/Quickshell architecture on Hyprland for speed and fluidity",
+    "Multiple preset themes: Dracula, Catppuccin, Material You, Nord, Gruvbox, Tokyo Night",
+    "Background services: weather, music (MPRIS), clipboard, notifications, audio, brightness"
+  ],
+  "publicApiSurface": [
+    "~/.nibrasshell.json — user configuration file",
+    "ThemeManager — manages theme loading and Hyprland color updates",
+    "WallpaperController — controls wallpaper display and depth effects",
+    "SystemService — CPU, RAM, temperature monitoring and AI analysis",
+    "Weather — fetches and summarizes weather from wttr.in",
+    "MusicService — MPRIS-based music player integration",
+    "ClipboardService — clipboard monitoring via wl-paste",
+    "NotifManager — notification management with do-not-disturb mode",
+    "AiService / AiAnalysisService — AI provider integration (Gemini etc.)",
+    "EventBus — inter-component communication bus",
+    "App.qml — unified service paths and command launcher",
+    "shell.qml — main QML shell entry point"
+  ]
+}

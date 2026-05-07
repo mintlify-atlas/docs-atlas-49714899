@@ -1,0 +1,48 @@
+---
+title: "Notification system in NibrasShell"
+description: "Understand how NibrasShell receives, displays, and manages notifications — including toast animations, do-not-disturb mode, and custom alert sounds."
+keywords: ["notifications", "do not disturb", "NotifManager", "toast", "NibrasShell"]
+---
+
+NibrasShell ships a self-contained notification system that handles both the immediate display of incoming alerts and the longer-term storage of a notification history. It is built on top of Quickshell's `NotificationServer`, which registers the shell as the system's active notification daemon via the DBus `org.freedesktop.Notifications` interface. The `NotifManager` service sits above that layer and adds NibrasShell-specific behaviour: history tracking, do-not-disturb gating, and sound playback.
+
+## How notifications appear
+
+When an application sends a notification, `NotifManager` receives it and — unless do-not-disturb is active — spawns an animated toast via the global `Notifications` overlay, which is a single-instance window created at startup in `shell.qml`.
+
+- Toasts appear in the **top-right corner** of the screen and slide in with a smooth animation.
+- Each toast has an **auto-dismiss timer** that removes it after a configurable duration.
+- If you hover or scroll over a toast, the timer pauses so you have time to read it.
+- Notifications that include images (e.g., album art, app icons) render the image inside the toast.
+- Action buttons defined by the sending application appear as clickable items inside the toast.
+
+## Notification centre
+
+The full notification history is accessible from the **Notifications** section in the LeftWindow side panel. From there you can:
+
+- Scroll through all received notifications in chronological order.
+- See the **unread count** displayed as a badge on the LeftBar icon.
+- **Clear all** notifications with a single button, resetting the badge to zero.
+- Toggle **do-not-disturb** mode without opening the Settings App.
+
+## Do-not-disturb mode
+
+When do-not-disturb is enabled, incoming notifications are still received and stored in the notification centre, but no toasts are displayed and no alert sounds play. The LeftBar badge continues to update so you can check what arrived at any time.
+
+<Info>
+  You can also bind do-not-disturb to a Hyprland keybinding via the IPC handler. Check the Cheatsheet (`Cheatsheet` panel) for the exact IPC function name.
+</Info>
+
+## Alert sounds
+
+NibrasShell can play an audio cue when a notification arrives. The sound is played via `NotifManager.playNotificationTone()`, which accepts a path to an audio asset. The default notification sound is bundled as `App.assets.audio.notifyStandard` and is used automatically.
+
+Alert sounds are always silenced when do-not-disturb mode is active.
+
+<Tip>
+  To customise the notification sound, you can call `NotifManager.playNotificationTone(path)` with the path to your audio file from a custom script or Quickshell component.
+</Tip>
+
+<Warning>
+  Alert sounds are automatically silenced when do-not-disturb mode is active — toasts will still appear in the notification centre.
+</Warning>

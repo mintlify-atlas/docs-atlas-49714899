@@ -1,0 +1,56 @@
+---
+title: "NibrasShell: AI-integrated Hyprland shell"
+description: "NibrasShell is a QML/Quickshell shell for Hyprland with an AI system daemon, Material 3 dynamic theming, and a fully customizable desktop UI."
+---
+
+NibrasShell is a modern Linux desktop shell built on top of Hyprland and Quickshell, written in QML. It brings together a deeply integrated AI daemon, dynamic Material 3 color theming, and a unified UI — including a top bar, smart capsule island, and left-side menu — into a single cohesive shell you can make your own. Rather than layering AI on top of a traditional desktop, NibrasShell builds it in from the ground up: background services silently monitor your system, summarize your weather, and react to your music, surfacing information only when it matters.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install NibrasShell on Arch, Fedora, or Void Linux using the automated installer script.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Configure your username, location, AI provider, and theme to get up and running fast.
+  </Card>
+  <Card title="UI Components" icon="table-layout" href="/components/overview">
+    Explore the Top Bar, Smart Capsule, Left Menu, Desktop, and every UI component.
+  </Card>
+  <Card title="Theming" icon="palette" href="/theming/themes-and-colors">
+    Choose from Dracula, Catppuccin, Nord, Gruvbox, and more — or generate colors from your wallpaper.
+  </Card>
+  <Card title="AI & Services" icon="brain" href="/services/ai-system-daemon">
+    Learn how the AI daemon monitors your system and delivers intelligent, context-aware insights.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/user-config">
+    Customize every aspect of NibrasShell through the visual Settings App or the config file.
+  </Card>
+</CardGroup>
+
+## Key features
+
+NibrasShell is built around five core capabilities that set it apart from a typical Hyprland rice or shell setup.
+
+**AI system daemon** — A background service that continuously monitors CPU, RAM, and temperature. When it detects a spike, it runs autonomous diagnostics, identifies resource-hungry processes, and generates an AI root-cause analysis. Smart cooldowns prevent notification spam.
+
+**Smart Capsule** — An interactive island that sits on your desktop and surfaces weather data, media controls, and system stats in one place, all powered by AI context.
+
+**Deep theming with Material 3** — Full Material 3 dynamic coloring lets NibrasShell generate a complete color palette automatically from your wallpaper. You can also choose from built-in themes like Dracula, Catppuccin, Nord, and Gruvbox. Static images, GIFs, and video wallpapers are all supported.
+
+**Control Hub (Settings App)** — A built-in visual settings interface lets you manage your identity, AI keys, wallpapers, themes, network monitor, and more without editing any config files directly.
+
+**Asynchronous, performant architecture** — Built on Quickshell and Hyprland, the shell uses an asynchronous design to prevent UI freezing. Background services for audio (Pipewire), media (MPRIS), and system stats run independently and feed into the UI without blocking it.
+
+## Technology stack
+
+NibrasShell is composed of several well-known open-source projects working together:
+
+- **Quickshell** — The QML shell framework that renders the entire UI
+- **Hyprland** — The Wayland compositor and window manager
+- **QML** — The declarative UI language used to build every component
+- **Python & Bash** — Helper scripts for system info, theming, and AI integration
+- **Pipewire** — Audio integration for volume control and media awareness
+- **MPRIS** — Media player integration for the Smart Capsule
+
+<Note>
+  NibrasShell is a personal project built with care, not a commercial product. It is actively developed and some features are still a work in progress. Check the [development roadmap](/reference/roadmap) to see what is coming next.
+</Note>

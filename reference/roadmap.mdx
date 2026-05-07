@@ -1,0 +1,64 @@
+---
+title: 'NibrasShell development roadmap'
+description: 'A look at the features and improvements planned for future NibrasShell releases, organised by category — AI, theming, widgets, hardware, and code quality.'
+keywords: ['roadmap', 'planned features', 'future', 'development', 'NibrasShell']
+---
+
+NibrasShell is a hobby project built and maintained in spare time. The items below reflect what is planned based on the project's `todo.md`, but there are no fixed release dates or guaranteed timelines. If a feature matters to you, contributions are welcome on [GitHub](https://github.com/AhmedSaadi0/NibrasShell).
+
+<Note>
+Items marked as completed in the repository are not listed here. This page covers only upcoming work.
+</Note>
+
+## Planned features
+
+<AccordionGroup>
+  <Accordion title="Smart Capsule and AI">
+    The Smart Capsule is one of NibrasShell's most distinctive features, and several AI-related improvements are in the pipeline:
+
+    - **Smart Capsule color customization** — independent controls for capsule background, border, and text colors, separate from the main theme palette.
+    - **Fuzzy Clock AI** — a fuzzy clock that labels time blocks ("Work Time", "Rest") and connects those states to contextual AI responses.
+    - **AI reactions to CPU/RAM spikes** — the capsule will use AI to explain high resource usage in a humorous, readable way (the reaction trigger is already implemented; the AI integration is pending).
+    - **Clipboard AI summarization** — automatically summarize copied text using your configured AI provider.
+  </Accordion>
+
+  <Accordion title="UI and theming">
+    Visual polish and customization options planned for the shell:
+
+    - **Game Mode** — a toggle that switches to a high-performance profile, hiding non-essential UI elements and adjusting compositor settings.
+    - **Bar and menu customization** — controls for bar shadow intensity and left menu panel width.
+    - **Advanced depth effects** — automatic depth-effect generation for each wallpaper in a dynamic folder, plus Cava audio visualizer integration with the depth layer.
+    - **New themes** — Solarized, Rosé Pine, and Oxocarbon theme presets.
+    - **Stop dynamic wallpaper rotation** — a toggle to pause automatic wallpaper cycling while keeping the dynamic folder configured.
+  </Accordion>
+
+  <Accordion title="Widgets and productivity">
+    New panels and applets to extend the shell's utility:
+
+    - **Quick notes widget** — a lightweight note-taking panel accessible from the left bar.
+    - **Favorite apps** — a pinned applications section for fast launching.
+    - **AI assistant list** — a dedicated menu for switching between different configured AI assistants.
+    - **Flexible menu open logic** — an option to choose between "reserve space" (pushes windows aside) and "floating" (overlays windows) panel open styles.
+  </Accordion>
+
+  <Accordion title="System and hardware">
+    Deeper system integration and hardware controls:
+
+    - **Full Bluetooth manager** — a complete UI for discovering, pairing, and managing Bluetooth devices.
+    - **Display settings** — monitor selection, resolution, refresh rate, and arrangement controls.
+    - **VPN indicator** — a status icon in the bar showing VPN connection state.
+    - **Quick toggles** — one-tap buttons for Wi-Fi, Airplane Mode, and Gammastep (blue-light filter).
+    - **Keyboard layout indicator** — shows the current input language, planned as an extension of the existing Smart Capsule keyboard indicator.
+  </Accordion>
+
+  <Accordion title="Code quality and refactoring">
+    Internal improvements that make the codebase cleaner and easier to extend:
+
+    - **Replace `LeftMenuStatus` with `EventBus`** — the older `LeftMenuStatus` singleton is being phased out in favour of the more flexible `EventBus` signal bus. This change decouples components that currently hold direct references to each other.
+    - **Reorganize components** — move components such as `SettingSwitch` out of shared directories and into the feature-specific directories where they belong.
+  </Accordion>
+</AccordionGroup>
+
+## Contributing
+
+NibrasShell welcomes pull requests, bug reports, and feature suggestions. Visit the [GitHub repository](https://github.com/AhmedSaadi0/NibrasShell) to browse open issues, submit a PR, or follow development progress. If you want to work on a planned item, opening an issue first to discuss the approach is a good way to avoid duplicated effort.

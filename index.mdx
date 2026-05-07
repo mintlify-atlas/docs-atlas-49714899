@@ -1,133 +1,55 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
-icon: 'star'
+title: "NibrasShell: AI-integrated Hyprland desktop shell"
+description: "NibrasShell is a modern, AI-powered shell for Hyprland built with QML/Quickshell, featuring dynamic theming, smart system monitoring, and a fully customizable UI."
 ---
 
-## Setting up
+NibrasShell is a modern Hyprland desktop shell built with passion — combining the speed of Quickshell and the power of AI to deliver a beautiful, intelligent, and fully customizable Linux desktop experience. From autonomous system monitoring to dynamic Material 3 color generation, every component is designed to stay out of your way while keeping the information you need at your fingertips.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install NibrasShell on Arch, Fedora, or Void Linux using the automated installer script.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get your shell configured and running with AI, themes, and services in minutes.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="UI Components" icon="table-layout" href="/components/overview">
+    Explore the Top Bar, Smart Capsule, Left Menu, Desktop, and every UI component.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Theming" icon="palette" href="/theming/themes-and-colors">
+    Choose from Dracula, Catppuccin, Nord, Gruvbox, and more — or generate colors from your wallpaper.
   </Card>
-</Columns>
+  <Card title="AI & Services" icon="brain" href="/services/ai-system-daemon">
+    Learn how the AI daemon monitors your system and delivers intelligent, context-aware insights.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/user-config">
+    Customize every aspect of NibrasShell through the visual Settings App or the config file.
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+## What makes NibrasShell different
 
-Everything you need to create world-class documentation.
+NibrasShell goes beyond a typical shell. It integrates AI deeply into the desktop experience — not as a chatbot overlay, but as a silent background intelligence that monitors your system, summarizes weather, comments on your music, and alerts you only when it matters.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Steps>
+  <Step title="Clone and install">
+    Run the automated installer to set up all dependencies and copy config files.
+    ```bash
+    git clone --depth 1 https://github.com/AhmedSaadi0/NibrasShell.git
+    cd NibrasShell/nibras_installer
+    python main.py
+    ```
+  </Step>
+  <Step title="Configure your identity">
+    Edit `~/.nibrasshell.json` or open the built-in Settings App to set your name, location, and AI provider keys.
+  </Step>
+  <Step title="Choose your theme">
+    Pick from six built-in themes or let Material You generate a color palette automatically from your wallpaper.
+  </Step>
+  <Step title="Explore your shell">
+    Open the Cheatsheet overlay to discover all available shortcuts and features.
+  </Step>
+</Steps>
 
-## Make your content agent ready
-
-Make your docs work for humans and AI agents alike.
-
-<Columns cols={2}>
-  <Card
-    title="Prompt component"
-    icon="robot"
-    href="/agent-ready/prompt"
-  >
-    Embed shareable AI prompts readers can copy or open in Cursor.
-  </Card>
-  <Card
-    title="Visibility"
-    icon="eye"
-    href="/agent-ready/visibility"
-  >
-    Show different content to humans and agents reading your docs.
-  </Card>
-  <Card
-    title="Contextual menu"
-    icon="bolt"
-    href="/agent-ready/contextual"
-  >
-    Give readers one-click access to Claude, ChatGPT, Cursor, and more.
-  </Card>
-  <Card
-    title="AI coding tools"
-    icon="wand-magic-sparkles"
-    href="/ai-tools/claude-code"
-  >
-    Set up Claude Code, Cursor, or Windsurf with Mintlify's skill.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Note>
+  NibrasShell requires **Hyprland** and **Quickshell**. The installer handles dependencies for Arch, Fedora, and Void Linux automatically. For other distributions, follow the [manual installation guide](/installation).
+</Note>

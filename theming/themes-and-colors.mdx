@@ -1,0 +1,114 @@
+---
+title: "Themes and color schemes in NibrasShell"
+description: "Explore NibrasShell's 8 preset themes — from Dracula to Tokyo Night — and learn how the color system, per-component overrides, and scheme variants work."
+keywords: ["themes", "color schemes", "Dracula", "Catppuccin", "Nord", "Gruvbox", "Tokyo Night", "Material You", "NibrasShell"]
+---
+
+NibrasShell ships with 8 preset themes, each with a dark and light variant. Every theme defines a full color palette, Hyprland border styles, typography choices, and system integration settings (GTK, Qt, Kvantum) — so switching a theme changes the entire look of your desktop in one step. You can also override individual colors per component through the **Settings App** without leaving your chosen base theme.
+
+## Preset themes
+
+<CardGroup cols={2}>
+  <Card title="Dracula" icon="ghost">
+    A dark, vampiric palette built around deep purples (`#bd93f9`), electric cyan (`#8be9fd`), and neon green (`#50fa7b`). Pairs with the Dracula GTK theme and Plasma color scheme. Ships with a pre-generated depth overlay for the desktop clock.
+  </Card>
+  <Card title="Catppuccin" icon="cat">
+    Soft pastel tones available in four Mocha-style flavors (dark and light variants). Primary color is Catppuccin Blue (`#89B4FA`), secondary is Pink (`#F38BA8`). Uses the Catppuccin Mocha GTK theme.
+  </Card>
+  <Card title="Material / Material You" icon="palette">
+    Google-style dynamic theming powered by the KDE Plasma `MaterialYouDark` color scheme. Colors are pulled from Kirigami's theme engine at runtime, so they update whenever you change your system accent. Enable `_enableDynamicColoring` to generate colors from your wallpaper instead.
+  </Card>
+  <Card title="Nord" icon="snowflake">
+    Arctic blues and grey-blues inspired by the Nord color system. Cool, restrained, and easy on the eyes for long sessions.
+  </Card>
+  <Card title="Gruvbox" icon="sun">
+    Warm retro colors with earthy yellows, oranges, and muted greens. Available in dark and light variants. A popular choice for terminal-heavy workflows.
+  </Card>
+  <Card title="Tokyo Night" icon="building">
+    A deep blue-purple cityscape palette that evokes a neon-lit skyline. Dark and high-contrast, with vibrant accent colors against near-black backgrounds.
+  </Card>
+  <Card title="Colors" icon="sparkles">
+    A minimal single-color theme centered on electric cyan (`#22C1EB`) and vivid magenta (`#FD02FF`). Uses the Shades of Purple GTK theme. Good as a starting point for your own custom palette.
+  </Card>
+  <Card title="Deer" icon="leaf">
+    A unique nature-inspired theme built around soft lavender (`#DCB5F3`), warm peach (`#F7B28A`), and sky blue (`#A2E8FF`) against a dark forest background. Designed around the deer wallpaper with a pre-built depth overlay.
+  </Card>
+</CardGroup>
+
+## The color system
+
+Each theme exposes a structured color palette through `BaseTheme.qml`. Colors are organized into semantic roles so that every UI component can reference the right token without hard-coding hex values.
+
+<AccordionGroup>
+  <Accordion title="Primary and secondary">
+    `primary` is the main accent color used for highlights, active states, and interactive elements. `onPrimary` is the foreground color rendered on top of it (text, icons). `secondary` provides a complementary accent for secondary actions and indicators. `onSecondary` is its paired foreground.
+  </Accordion>
+  <Accordion title="Tertiary">
+    `tertiary` is a third accent used for decorative elements, tags, and additional contrast. `onTertiary` is its foreground pair.
+  </Accordion>
+  <Accordion title="Error, Success, Warning">
+    Semantic status colors for notifications, validation feedback, and OSD indicators:
+    - `error` / `onError` — destructive actions and failure states
+    - `success` / `onSuccess` — confirmation and positive feedback
+    - `warning` / `onWarning` — caution and non-critical alerts
+  </Accordion>
+  <Accordion title="Top bar colors">
+    The top bar has three background/foreground pairs (`topbarBgColorV1`, `topbarBgColorV2`, `topbarBgColorV3` and their `Fg` equivalents) plus a base `topbarColor` and `topbarFgColor`. This lets different sections of the bar use distinct shades while staying coordinated with the theme.
+  </Accordion>
+  <Accordion title="Sidebar colors">
+    The left sidebar (left menu) uses `leftMenuBgColorV1`, `leftMenuBgColorV2`, and `leftMenuBgColorV3` for layered backgrounds (base, surface, active element) and three matching foreground colors. Active items use the tertiary variant to stand out clearly.
+  </Accordion>
+  <Accordion title="OSD colors">
+    Volume and brightness on-screen displays use `volOsdBgColor` and `volOsdFgColor`, which can be set independently from the rest of the bar.
+  </Accordion>
+</AccordionGroup>
+
+All colors respect the global `_alpha` property — lowering it applies uniform transparency across every color in the theme.
+
+## Switching themes
+
+<Steps>
+  <Step title="Open the Settings App">
+    Press your configured shortcut to open the **Settings App**, or click the settings icon in the left sidebar.
+  </Step>
+  <Step title="Go to Appearance">
+    Navigate to the **Appearance** section. You will see a grid of all available themes with live previews.
+  </Step>
+  <Step title="Select a theme">
+    Click any theme card to load it immediately. NibrasShell applies the theme to the shell, Hyprland borders, GTK, Qt, Kvantum, and Konsole profiles in one operation.
+  </Step>
+  <Step title="Choose dark or light">
+    Each preset has a **Dark** and **Light** variant. Toggle between them using the mode switch above the theme grid.
+  </Step>
+</Steps>
+
+<Note>
+  Theme selections persist across sessions. NibrasShell saves the active theme name to a session file and restores it on the next login.
+</Note>
+
+## Per-component color overrides
+
+You can fine-tune colors for individual components without switching your base theme. In the **Settings App**, open the color editor for any of these components:
+
+- **Top bar** — background, foreground, and each of the three variant pairs
+- **Left sidebar** — all three background/foreground layer pairs
+- **OSD** — volume and brightness indicator colors
+- **Desktop clock** — foreground color and shadow color
+
+Changes are saved to a per-theme cache file (for example, `~/.cache/nibrasshell/themes/DraculaDark.json`). Resetting a component restores it to the theme's original default.
+
+## Material You parameters
+
+When using the **Material You** theme with dynamic coloring enabled, three parameters control how the generated palette looks:
+
+| Parameter | Key | Default | Effect |
+|---|---|---|---|
+| Scheme variant | `scheme_variant` | `2` | Selects the M3 tone-mapping variant (tonal spot, vibrant, expressive, etc.) |
+| Chroma multiplier | `dynamicColoringChromaMult` | `2.5` | Scales color saturation — higher values produce more vivid output |
+| Tone multiplier | `dynamicColoringToneMult` | `1.0` | Shifts the overall lightness of the generated palette |
+
+You can adjust all three in the **Settings App** under the Material You theme options, or edit them directly in your theme cache file.
+
+<Tip>
+  If the generated colors feel too muted, increase `dynamicColoringChromaMult` to `3.0` or `3.5`. If they feel too bright, lower it toward `1.5`.
+</Tip>

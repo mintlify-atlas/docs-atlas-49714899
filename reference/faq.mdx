@@ -1,0 +1,49 @@
+---
+title: 'NibrasShell FAQ: common questions answered'
+description: 'Answers to the most frequently asked questions about NibrasShell — readiness, compatibility, themes, AI, config, and how to get started quickly.'
+keywords: ['FAQ', 'questions', 'NibrasShell', 'compatibility', 'themes', 'AI', 'config']
+---
+
+Below you'll find answers to the questions that come up most often about NibrasShell. If your question isn't covered here, check the [troubleshooting guide](/reference/troubleshooting) or open an issue on GitHub.
+
+<AccordionGroup>
+  <Accordion title="Is NibrasShell ready for daily use?">
+    NibrasShell is functional and actively developed, but it is still a work in progress. Core features — the top bar, left panel, Smart Capsule, notifications, themes, and settings — are stable enough for daily use on Hyprland. Some planned features (full Bluetooth management, display settings, certain AI integrations) are not yet implemented. Expect occasional rough edges and refer to the [roadmap](/reference/roadmap) for what's coming next.
+  </Accordion>
+
+  <Accordion title="Which Linux distributions are supported?">
+    The automated install script targets **Arch Linux**, **Fedora**, and **Void Linux**. On other distributions you can install NibrasShell manually by resolving the dependencies yourself (Quickshell, Hyprland, and the optional tools listed in the [troubleshooting guide](/reference/troubleshooting)). Community members have reported success on other Wayland-based distros.
+  </Accordion>
+
+  <Accordion title="Can I change themes from the GUI?">
+    Yes. Open the **Settings** panel and navigate to the Theming section. You can switch between bundled themes, adjust Material 3 color scheme variants, and change wallpapers — all without editing any config files by hand. Changes take effect immediately and are persisted to `~/.nibrasshell.json`.
+  </Accordion>
+
+  <Accordion title="Does NibrasShell support video wallpapers?">
+    Yes. NibrasShell supports `.mp4`, `.mkv`, and other common video formats as wallpapers, as well as animated `.gif` files. Set your video file as the wallpaper from the Settings panel. Note that the depth effect is not available for video wallpapers — it applies to static images only.
+  </Accordion>
+
+  <Accordion title="Where are keybindings configured?">
+    NibrasShell ships with a built-in **Cheatsheet** panel that lists all available keybindings. Open it from the left bar or via your Hyprland keybind for the cheatsheet. For Hyprland-level keybinds (workspace switching, window focus, etc.), edit your `~/.config/hypr/hyprland.conf` as usual.
+  </Accordion>
+
+  <Accordion title="Can I use it without AI features?">
+    Yes. AI features are entirely optional. If you leave `aiApiKey` empty in settings, AI-powered elements (the capsule AI reactions, clipboard summarization, weather analysis) will simply remain inactive. All other shell functionality works independently.
+  </Accordion>
+
+  <Accordion title="How do I update NibrasShell?">
+    Pull the latest changes from the repository with `git pull` in the NibrasShell directory, then restart Quickshell. If the install script has been updated with new dependencies, re-run it to ensure your system stays in sync. Always check the release notes or commit log before updating, as configuration keys in `~/.nibrasshell.json` may occasionally change.
+  </Accordion>
+
+  <Accordion title="What AI providers are supported?">
+    NibrasShell supports **Gemini**, **OpenAI**, **DeepSeek**, **OpenRouter**, **Ollama** (for local models), and **local** (a generic local endpoint). Set `aiProvider` to the provider name, provide the matching `aiApiKey`, and configure the model name in the Settings panel. Use `ai/list-gemini.py` to discover available Gemini model names.
+  </Accordion>
+
+  <Accordion title="Can I use it on non-Arch distros?">
+    Yes, with a manual install. The automated script covers Arch, Fedora, and Void, but NibrasShell itself has no hard dependency on any specific package manager. Install Quickshell, Hyprland, and the optional tools (`wl-clipboard`, `brightnessctl`, `playerctl`, `ddcutil`, etc.) using your distro's package manager, then start Quickshell pointing at the NibrasShell config directory.
+  </Accordion>
+
+  <Accordion title="Where is the config file stored?">
+    The main configuration file is `~/.nibrasshell.json`. It stores your theme selection, wallpaper path, AI provider settings, weather location, network interface name, and all options set through the Settings panel. Temporary runtime data lives in `~/.cache/nibrasshell/`, and theme cache files are in `~/.cache/nibrasshell/themes`.
+  </Accordion>
+</AccordionGroup>

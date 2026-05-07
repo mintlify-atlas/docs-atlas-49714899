@@ -1,0 +1,79 @@
+---
+title: 'NibrasShell architecture and internals'
+description: 'A technical overview of how NibrasShell is structured across its QML, Hyprland, services, and scripts layers, with key modules and data locations explained.'
+keywords: ['architecture', 'internals', 'QML', 'Quickshell', 'Hyprland', 'layers', 'modules']
+---
+
+NibrasShell is built in distinct, cooperating layers. The QML/Quickshell layer owns every pixel you see; Hyprland sits beneath it handling window placement and screen events; background QML services supply the data that drives the UI; and a thin scripts layer bridges the gap to system tools using Python and Bash. Understanding this separation makes it easier to trace bugs, add features, or adapt the shell to your workflow.
+
+## System layers
+
+NibrasShell composes four layers, each with a clear responsibility.
+
+<AccordionGroup>
+  <Accordion title="QML/Quickshell layer">
+    All UI components are written in QML and assembled in `shell.qml` using Quickshell's `PanelWindow` primitives. Quickshell provides the Wayland surface management, multi-screen `Variants`, and IPC handler that the shell depends on. Every panel — the top bar, left bar, Smart Capsule, launcher, power menu, and more — is declared here and created once at startup to avoid the latency of rebuilding components on demand.
+  </Accordion>
+
+  <Accordion title="Hyprland layer">
+    Hyprland provides window management, workspace events, and screen lifecycle signals. NibrasShell listens to raw Hyprland events (such as `openwindow`) via `Quickshell.Hyprland` and calls `Hyprland.refreshToplevels()` to keep its window list in sync. Colors written to the Hyprland config (borders, active window highlights) are also applied by `ThemeManager` through this layer.
+  </Accordion>
+
+  <Accordion title="Services layer">
+    Background QML singletons manage long-running state and periodic data fetching. Key services include `NetworkService`, `Weather`, `MusicService`, `SystemService`, and the notification backend. Services expose their state as QML properties that UI components bind to reactively, so the interface updates automatically when data changes.
+  </Accordion>
+
+  <Accordion title="Scripts layer">
+    Python and Bash scripts handle tasks that are impractical in pure QML — wallpaper depth-effect generation, rembg/OpenCV image processing, and system-level queries. `App.qml` acts as the single gateway to these scripts, exposing unified paths and command-runner helpers so that individual components never hard-code script locations.
+  </Accordion>
+</AccordionGroup>
+
+## Key modules
+
+<CardGroup cols={2}>
+  <Card title="shell.qml" icon="file-code">
+    The main entry point. It waits for `ThemeManager` to signal `initialThemeReady`, then activates the main UI loader. All per-screen panels are instantiated here using Quickshell `Variants`, and single-instance panels (the left window, cheatsheet, launcher, and power menu) are created once through `initializeGlobalWindows`.
+  </Card>
+
+  <Card title="App.qml" icon="terminal">
+    A unified path provider and command runner. All services and components call `App` to resolve script paths or run shell commands, keeping path logic in one place rather than scattered across the codebase.
+  </Card>
+
+  <Card title="ThemeManager" icon="palette">
+    Loads the active theme from `~/.nibrasshell.json`, applies color tokens across all QML components, and syncs border and highlight colors into the Hyprland config. It emits `initialThemeReady` once the first theme load is complete, which gates the rest of the UI startup sequence.
+  </Card>
+
+  <Card title="WallpaperController" icon="image">
+    Manages wallpaper display, dynamic folder rotation, and triggers the depth-effect generation pipeline when a new wallpaper is set. Processed depth images are cached in `~/.cache/nibrasshell/` and reused on subsequent loads.
+  </Card>
+
+  <Card title="EventBus" icon="radio">
+    A cross-component signal bus used to decouple UI elements. Components emit named events (defined in `EventNames.js`) and subscribe to them without holding direct references to each other. `EventBus` is gradually replacing the older `LeftMenuStatus` singleton.
+  </Card>
+
+  <Card title="ConstValues" icon="sliders">
+    A shared constants file (`ConstValues.js`) that stores menu index values, timing constants, and other magic numbers used across the shell. Centralising these prevents drift between components that must agree on the same values.
+  </Card>
+</CardGroup>
+
+## Data locations
+
+| Path | Purpose |
+|---|---|
+| `~/.nibrasshell.json` | Persistent user configuration — theme, wallpaper, AI provider, weather location, and all settings panel options |
+| `~/.cache/nibrasshell/` | Temporary runtime data — todo list file, generated depth images, and other transient files |
+| `~/.cache/nibrasshell/themes` | Cached theme data used by `ThemeManager` to avoid reprocessing on every launch |
+
+## Async startup sequence
+
+<Note>
+NibrasShell creates all global windows once and keeps them alive for the entire session. This design trades a slightly higher idle memory footprint for near-instant panel open times, since no QML component tree needs to be constructed on demand.
+</Note>
+
+The startup sequence runs as follows:
+
+1. `shell.qml` loads and begins listening for `ThemeManager.initialThemeReady`.
+2. `ThemeManager` reads `~/.nibrasshell.json` and applies the theme; it then emits `initialThemeReady`.
+3. A one-second `startComp` timer fires, then `activateMainUI()` is called.
+4. The main UI loader becomes active; per-screen `Variants` and global panels are instantiated.
+5. The splash screen fades out after another second.

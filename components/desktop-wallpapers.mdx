@@ -1,0 +1,83 @@
+---
+title: "Desktop and wallpaper configuration"
+description: "Set static images, video or GIF wallpapers, or rotating folders, and customise the clock widget font, position, color, and the depth-shadow overlay effect."
+keywords: ["wallpaper", "desktop", "clock widget", "depth effect", "NibrasShell"]
+---
+
+The **Desktop** is a full-screen `PanelWindow` that sits behind every other shell layer. It is defined in `desktop/` and instantiated once per monitor by `shell.qml`. Beyond simply rendering a wallpaper, the desktop hosts a customisable clock widget and supports a depth-shadow overlay that creates a sense of three-dimensional space between the wallpaper and your windows.
+
+## Wallpaper types
+
+NibrasShell supports three wallpaper modes. Wallpaper settings are stored in the active theme's cache file — you typically set them through the **Settings App** rather than editing files by hand.
+
+<Tabs>
+  <Tab title="Static image">
+    Any common image format (PNG, JPG, WebP) works as a static wallpaper. Set the path in the **Settings App → Wallpapers** section, or point `_wallpaper` in your theme file directly at the image path.
+
+    ```qml
+    // In your theme cache file
+    _wallpaper: "/home/you/wallpapers/mountain.png"
+    ```
+  </Tab>
+  <Tab title="Video or GIF">
+    `Wallpaper.qml` renders video files and animated GIFs as live wallpapers using Qt's multimedia backend. Set the wallpaper path to an `.mp4`, `.webm`, or `.gif` file from the **Settings App**. The video loops continuously with audio muted by default. Performance depends on your GPU driver and the file's resolution and codec.
+  </Tab>
+  <Tab title="Dynamic folder rotation">
+    Point `_dynamicWallpapersPath` to a folder, enable `_enableDynamicWallpapers`, and set `_dynamicWallpapersInterval` (in milliseconds). `WallpaperController` reads the folder contents and cycles through them on the timer.
+
+    ```qml
+    _enableDynamicWallpapers: true
+    _dynamicWallpapersPath: "/home/you/wallpapers/"
+    _dynamicWallpapersInterval: 900000   // 15 minutes
+    ```
+
+    If dynamic coloring is also enabled, the color pipeline runs automatically each time the wallpaper rotates.
+  </Tab>
+</Tabs>
+
+When the left panel is open, the desktop can apply a configurable blur to the wallpaper so the panel content stays readable against busy backgrounds.
+
+## Clock widget
+
+The desktop clock widget overlays the wallpaper and supports extensive customisation. All clock settings are stored in the active theme's cache file and managed through the **Settings App → Desktop clock** section. The underlying theme properties are:
+
+| Theme property | Description |
+|---|---|
+| `_desktopClockEnabled` | Show or hide the clock widget. |
+| `_desktopClockFont` | Font family (e.g., `"JetBrainsMono Nerd Font"`). |
+| `_desktopClockSize` | Width and height of the clock area as a Qt `size`. |
+| `_desktopClockPosition` | Position on screen as a Qt `point` (x, y). |
+| `_desktopClockColor` | Clock text colour in hex (e.g., `"#ffffff"`). |
+| `_desktopClockUseThemeColor` | Use the theme's primary colour for the clock instead of a fixed colour. |
+| `_desktopClockFormat` | Time format string (e.g., `"hh:mm:ss"`, `"h:mm AP"`). |
+| `_desktopClockLocal` | Locale for language-aware formatting (e.g., `"ar"`, `"en_US"`). |
+| `_desktopClockSahdowEnabled` | Enable a drop shadow behind the clock text. |
+| `_desktopClockSahdowColor` | Shadow colour in hex. |
+| `_desktopClockUseAnimation` | Animate the clock when the time changes. |
+
+<Note>
+  Use the **Settings App → Desktop clock** section to adjust all clock properties visually. Changes are written to the theme cache file at `~/.cache/nibrasshell/themes/` and applied immediately.
+</Note>
+
+## Depth effect
+
+The depth effect adds a subject-isolation layer on top of the wallpaper: the foreground subject is extracted from the image and composited back over a blurred version of the background, creating a subtle parallax-like sense of depth.
+
+<Steps>
+  <Step title="Enable the effect">
+    Go to **Settings App → Wallpapers → Depth Effect** and toggle the effect on. The `_desktopClockDepthEffectEnabled` theme property is set to `true`. The desktop then renders an `Overlay` layer on top of the wallpaper.
+  </Step>
+  <Step title="Choose a generation method">
+    NibrasShell supports two tools for generating the subject mask, selectable from the **Depth Effect** settings panel:
+
+    - **`rembg`** — uses a neural network (U-2-Net or ISNet) to remove the background. Produces higher-quality masks but requires a one-time model download and the `rembg` Python package.
+    - **OpenCV** — a faster, CPU-based approach with no model download. Results are less precise on complex subjects.
+  </Step>
+  <Step title="Cache management">
+    Generated overlays are stored in `~/.cache/nibrasshell/themes/` and reused on subsequent loads. NibrasShell automatically clears unused overlays via `overlay_cache_images_cleaner.py`.
+  </Step>
+</Steps>
+
+<Warning>
+  The `rembg` method requires Python and the `rembg` package. Run `pip install rembg` before enabling it, or choose **OpenCV** if you prefer no additional dependencies.
+</Warning>

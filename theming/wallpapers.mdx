@@ -1,0 +1,132 @@
+---
+title: "Wallpaper setup and depth effects"
+description: "Set static, GIF, or video wallpapers in NibrasShell, enable folder rotation, and add a depth overlay that composites a foreground subject over the wallpaper."
+keywords: ["wallpaper", "depth effect", "rembg", "OpenCV", "dynamic wallpapers", "blur", "NibrasShell"]
+---
+
+NibrasShell supports static images, animated GIFs, and videos as wallpapers, and can automatically rotate through a folder of images on a configurable timer. Beyond simply displaying an image, the shell adds a depth effect that composites a foreground subject over the wallpaper — creating visual separation between the desktop clock and the background. Blur is applied contextually when menus open, so the wallpaper softens behind overlaid panels without changing the base image.
+
+## Wallpaper types
+
+<Tabs>
+  <Tab title="Static image">
+    Any common image format (PNG, JPG, WEBP) works as a static wallpaper. Set the path in the **Settings App** or point `_wallpaper` in your theme file to the full path or a bundled asset key.
+
+    ```qml
+    // In your theme file
+    _wallpaper: "/home/you/wallpapers/mountain.png"
+    ```
+
+    If you provide just a filename without a path separator, NibrasShell resolves it against the bundled assets folder automatically.
+  </Tab>
+  <Tab title="Video or animated GIF">
+    `Wallpaper.qml` renders video files and animated GIFs as live wallpapers using Qt's multimedia backend. Set the wallpaper path to a `.mp4`, `.webm`, or `.gif` file. Performance depends on your GPU driver and the file's resolution and codec.
+
+    <Note>
+      Video wallpapers loop continuously. There is no built-in volume control — audio is muted by default.
+    </Note>
+  </Tab>
+  <Tab title="Dynamic rotation">
+    Point `_dynamicWallpapersPath` to a folder, enable `_enableDynamicWallpapers`, and set `_dynamicWallpapersInterval` (in milliseconds). `WallpaperController` reads the folder contents and cycles through them on the timer.
+
+    ```qml
+    _enableDynamicWallpapers: true
+    _dynamicWallpapersPath: "/home/you/wallpapers/dark"
+    _dynamicWallpapersInterval: 900000   // 15 minutes
+    ```
+
+    The current index is persisted in the theme cache so the session resumes at the same wallpaper after a restart.
+  </Tab>
+</Tabs>
+
+## Setting your wallpaper
+
+<Steps>
+  <Step title="Open the Settings App">
+    Press your configured shortcut or click the settings icon in the left sidebar to open the **Settings App**.
+  </Step>
+  <Step title="Go to Wallpapers">
+    Navigate to the **Wallpapers** section. You will see tabs for local wallpapers, downloaded wallpapers, and Wallhaven search.
+  </Step>
+  <Step title="Choose a source">
+    - **Local** — wallpapers scanned from your `~/Pictures` folder and default asset paths.
+    - **Downloaded** — wallpapers previously downloaded from Wallhaven, stored in the NibrasShell downloads folder.
+    - **Wallhaven** — search and download directly from the Wallhaven API without leaving the Settings App.
+  </Step>
+  <Step title="Click a wallpaper to apply it">
+    Selecting a wallpaper applies it immediately. If dynamic coloring is enabled for your active theme, the color pipeline runs automatically after the wallpaper loads.
+  </Step>
+</Steps>
+
+## Depth effect
+
+The depth effect adds a transparent overlay layer on top of the wallpaper. The overlay is a cutout of the wallpaper's foreground subject (for example, a person, animal, or object) with its background removed. The desktop clock sits between the wallpaper and the overlay, so the subject appears in front of the clock — creating a convincing layered composition.
+
+### Generation methods
+
+NibrasShell provides two scripts for generating depth overlays:
+
+<CardGroup cols={2}>
+  <Card title="rembg (AI-based)" icon="robot">
+    `create_depth_image_rembg.py` uses the `rembg` library with U-2-Net or ISNet models to remove the background. This produces cleaner results, especially around hair, fur, and complex edges. Requires Python and `rembg` to be installed.
+
+    Configurable parameters:
+    - `model` — model name (default: `u2net`; alternative: `isnet-general-use`)
+    - `alphaMatting` — enable edge refinement (slower but higher quality)
+    - `foregroundThreshold`, `backgroundThreshold`, `erodeSize` — matting controls
+  </Card>
+  <Card title="OpenCV" icon="bolt">
+    `create_depth_image_opencv.py` uses classical computer vision for background removal. It runs faster and requires no additional model downloads, but handles complex edges less accurately than the AI approach.
+  </Card>
+</CardGroup>
+
+### Enabling the depth effect
+
+<Steps>
+  <Step title="Open the Settings App">
+    Go to **Wallpapers** → **Depth Effect**.
+  </Step>
+  <Step title="Select a generation method">
+    Choose **rembg** (recommended) or **OpenCV** from the method selector.
+  </Step>
+  <Step title="Generate the overlay">
+    Click **Generate**. NibrasShell runs `DepthEffectController` in the background, which calls the appropriate Python script with your current wallpaper. A progress indicator appears while generation runs.
+  </Step>
+  <Step title="The overlay is applied automatically">
+    When the script finishes, the overlay path is saved to the theme cache as `_desktopClockDepthOverlayPath` and applied immediately.
+  </Step>
+</Steps>
+
+### Cache and cleanup
+
+Generated overlay images are stored in `~/.cache/nibrasshell/themes/`. The filename is a random string so multiple overlays can coexist.
+
+When you switch themes or wallpapers, old overlays may become unused. NibrasShell automatically cleans up stale overlays by running `overlay_cache_images_cleaner.py`, which compares the cache folder against all `depthOverlayPath` values referenced in theme cache files and removes any orphaned images.
+
+You can trigger cleanup manually by calling `ThemeManager.cleardUnusedOverlayImages()` from the Quickshell console.
+
+<Info>
+  Several preset themes (Dracula, Deer, Colors, Material You) ship with pre-generated depth overlays bundled as assets, so the depth effect works out of the box without running any scripts.
+</Info>
+
+## Wallpaper blur
+
+NibrasShell applies blur to the wallpaper layer in two contexts:
+
+<AccordionGroup>
+  <Accordion title="Blur when menus open">
+    When any overlay menu (the right-click menu, the app launcher, or similar panels) opens, the wallpaper blurs behind it. Enable this with `_enableWallpaperBlur: true` in your theme. The blur intensity is controlled by `_wallpaperBlurStrength` (range `0.0`–`1.0`, default `0.9`).
+
+    ```qml
+    _enableWallpaperBlur: true
+    _wallpaperBlurStrength: 0.9
+    ```
+  </Accordion>
+  <Accordion title="Desktop blur on LeftWindow open">
+    In non-floating sidebar modes, opening the **LeftWindow** (the left sidebar/menu panel) animates the desktop container sideways. The wallpaper blurs behind the panel during this transition to visually separate the panel from the desktop content.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Hyprland-level blur (configured via `_hyprBlurEnabled`, `_hyprBlurSize`, and `_hyprBlurPasses`) is separate from wallpaper blur. Hyprland blur affects window decorations and transparent surfaces; wallpaper blur is a QML layer effect applied to the `PanelWindow` background itself.
+</Tip>

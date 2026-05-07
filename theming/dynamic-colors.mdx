@@ -1,0 +1,110 @@
+---
+title: "Dynamic Material You color generation"
+description: "NibrasShell generates a full M3 color palette from your wallpaper automatically, updating Hyprland borders and shell colors whenever the wallpaper changes."
+keywords: ["Material You", "dynamic colors", "M3", "wallpaper colors", "scheme_variant", "chroma", "NibrasShell"]
+---
+
+NibrasShell can automatically generate a full color palette from your wallpaper using Material You (M3). When dynamic coloring is enabled, every time the wallpaper changes the shell extracts the dominant colors, builds a complete tonal palette, and applies it to the top bar, sidebar, OSD, and Hyprland window borders — with no manual intervention required. You can still override any individual color after generation through the **Settings App**.
+
+## How it works
+
+The dynamic color pipeline runs through three components:
+
+<Steps>
+  <Step title="WallpaperController signals a new image">
+    When a wallpaper is loaded — either on startup or after a rotation — `WallpaperController` emits a `wallpaperReady` signal with the full file path of the new wallpaper.
+  </Step>
+  <Step title="ThemeManager checks for dynamic coloring">
+    `ThemeManager` listens for `wallpaperReady`. If the active theme has `enableDynamicColoring` set to `true`, it calls `SystemBridge.applyM3()` with the wallpaper path and the current scheme parameters.
+  </Step>
+  <Step title="SystemBridge runs the M3 script">
+    `SystemBridge` dispatches a command to the `m3/dynamic-m3.py` Python script, passing the wallpaper path, theme mode (`dark` or `light`), scheme variant, chroma multiplier, and tone multiplier. The script uses the `material-color-utilities` library to extract seed colors and generate a full M3 tonal palette.
+  </Step>
+  <Step title="Plasma color scheme is updated">
+    The generated palette is written to a KDE Plasma color scheme file and applied immediately via `plasma-apply-colorscheme`. This updates all Qt/KDE application colors in real time.
+  </Step>
+  <Step title="ThemeManager applies Hyprland borders">
+    `HyprlandBridge` reads the new primary and secondary colors from the applied theme and updates the `col.active_border` and `col.inactive_border` values in Hyprland through `hyprctl`.
+  </Step>
+</Steps>
+
+<Info>
+  Dynamic coloring only activates when `enableDynamicColoring` is `true` in the active theme. The **Material / Material You** themes (`M3Dark`, `M3Light`) have this enabled by default. Other preset themes do not.
+</Info>
+
+## Enabling dynamic coloring
+
+You can turn on dynamic coloring for any theme from the **Settings App**:
+
+1. Open the **Settings App** and go to **Appearance**.
+2. Select the **Material You** theme (dark or light).
+3. Dynamic coloring activates automatically once the theme loads and a wallpaper is present.
+
+To enable it on a different base theme, edit the theme cache file at `~/.cache/nibrasshell/themes/<ThemeName>.json` and set:
+
+```json
+{
+  "_enableDynamicColoring": true
+}
+```
+
+## Configuration parameters
+
+Three parameters control how the M3 algorithm shapes the generated palette. You can adjust them in the **Settings App** under Material You options, or set them in `BaseTheme.qml` for a custom theme.
+
+<AccordionGroup>
+  <Accordion title="scheme_variant (dynamicColoringSchemeVariant)">
+    Selects the M3 tone-mapping scheme. Each variant interprets the seed color differently:
+
+    | Value | Scheme |
+    |---|---|
+    | `0` | Tonal Spot (default Material You) |
+    | `1` | Vibrant |
+    | `2` | Expressive (NibrasShell default) |
+    | `3` | Fidelity |
+    | `4` | Monochrome |
+    | `5` | Neutral |
+    | `6` | Content |
+
+    The default in NibrasShell is `2` (Expressive), which produces a palette with good contrast and variety from most wallpapers.
+  </Accordion>
+  <Accordion title="dynamicColoringChromaMult">
+    A multiplier applied to the chroma (saturation) of the generated colors. The default is `2.5`.
+
+    - Values above `1.0` make the palette more vivid and saturated.
+    - Values below `1.0` pull the palette toward grey.
+    - A value of `3.0`–`4.0` works well for wallpapers with muted or low-saturation tones.
+  </Accordion>
+  <Accordion title="dynamicColoringToneMult">
+    A multiplier applied to the overall tone (lightness) of the generated palette. The default is `1.0`.
+
+    - Increase above `1.0` to lighten the palette.
+    - Decrease below `1.0` to darken it.
+    - Useful for fine-tuning dark vs. light mode contrast without switching theme mode.
+  </Accordion>
+</AccordionGroup>
+
+## Automatic updates on wallpaper rotation
+
+When dynamic wallpapers are enabled (`enableDynamicWallpapers: true`) and a folder of wallpapers is configured, `WallpaperController` rotates through the playlist on a timer. Each rotation emits `wallpaperReady`, which triggers the full color pipeline automatically.
+
+This means your entire color scheme — shell UI, Hyprland borders, Qt apps, and terminal — updates in sync with every wallpaper change.
+
+<Tip>
+  Set `dynamicWallpapersInterval` to a longer value (for example, `900000` for 15 minutes) to avoid too-frequent color refreshes during focused work.
+</Tip>
+
+## Overriding colors after generation
+
+Dynamic coloring generates a baseline palette, but you retain full control over individual colors. After the palette is applied, open the **Settings App** color editor to override any specific token:
+
+- Top bar background and foreground variants
+- Sidebar layer colors
+- OSD background and foreground
+- Primary, secondary, and tertiary accent colors
+
+Overrides are saved to the theme cache file and survive wallpaper changes — the override takes precedence over the newly generated value for that token only.
+
+<Note>
+  To reset a color override and let dynamic generation control it again, use the reset button next to that color in the **Settings App**. This removes the override key from the cache file.
+</Note>

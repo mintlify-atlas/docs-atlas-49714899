@@ -1,0 +1,157 @@
+---
+title: "~/.nibrasshell.json: NibrasShell user config reference"
+description: "A complete reference for every key in ~/.nibrasshell.json — the JSON file that controls NibrasShell's behavior, AI integrations, and UI layout."
+keywords: ["nibrasshell.json", "user config", "configuration file", "JSON settings", "NibrasShell"]
+---
+
+The file `~/.nibrasshell.json` is NibrasShell's primary user configuration store. Every preference — from your name and location to AI provider keys and workspace icons — lives here as a flat JSON object. You rarely need to edit this file by hand; the **Settings App** and the install script write it for you. But understanding its structure helps when you want to tweak defaults or script your own setup.
+
+## Complete example
+
+The block below shows a representative `~/.nibrasshell.json` with all supported keys and their default values.
+
+```json ~/.nibrasshell.json
+{
+  "username": "Ahmed",
+  "subtitle": "Linux enthusiast",
+  "profilePicture": "/home/ahmed/.face",
+
+  "city": "sanaa",
+  "country": "yemen",
+  "weatherLocation": "sanaa",
+  "firstDayOfWeek": 6,
+  "usePrayerTimes": true,
+
+  "networkMonitor": "wlp0s20f3",
+  "networkInterval": 400,
+
+  "aiProvider": "gemini",
+  "aiApiKey": "YOUR_KEY_HERE",
+  "weatherAiApiKey": "",
+  "musicAiApiKey": "",
+  "systemAiApiKey": "",
+  "weatherAiModel": "gemini-flash-lite-latest",
+  "musicAiModel": "gemini-flash-lite-latest",
+  "systemAiModel": "gemini-flash-lite-latest",
+  "aiPreferredLanguage": "English",
+  "weatherPersona": "...",
+  "musicPersona": "...",
+
+  "enableHighCpuAlert": true,
+  "enableHighRamAlert": true,
+  "enableHighTempAlert": true,
+  "cpuHighLoadThreshold": 85,
+  "ramHighLoadThreshold": 85,
+  "tempHighThreshold": 85,
+  "playCpuAlarmSound": true,
+  "playRamAlarmSound": true,
+  "playTempAlarmSound": true,
+  "resourceAlertCooldownMs": 60000,
+
+  "menuStyle": "docked_moving_bar",
+  "useBottomLauncher": false,
+  "bottomLauncherWidth": 800,
+  "topBarActiveWindowMinWidth": 200,
+  "topBarActiveWindowMaxWidth": 400,
+  "dynamicWorkspaces": false,
+  "activeWorkspacesIcons": ["󰋜", "󰿣", "󰂔", "󰉋", "󱙋", "󰭹", "󱍙", "󰺵", "󱋡", "󰙨"],
+  "inActiveWorkspacesIcons": ["", "󰿤", "󰂕", "󰉖", "󱙌", "󰻞", "󱍚", "󰺶", "󱋢", "󰤑"]
+}
+```
+
+<Note>
+  NibrasShell watches this file at runtime. Changes made by the **Settings App** take effect immediately without restarting the shell.
+</Note>
+
+## Settings reference
+
+<AccordionGroup>
+  <Accordion title="Personal info">
+    These keys control the identity displayed in the shell's dashboard and profile areas.
+
+    | Key | Type | Default | Description |
+    |-----|------|---------|-------------|
+    | `username` | string | `"Username"` | Your display name shown in the dashboard. |
+    | `subtitle` | string | `""` | A short tagline or role shown beneath your name. |
+    | `profilePicture` | string | `""` | Absolute path to your profile image (e.g. `/home/you/.face`). |
+  </Accordion>
+
+  <Accordion title="Location and weather">
+    These keys tell NibrasShell where you are so it can fetch accurate weather data and optionally show Islamic prayer times.
+
+    | Key | Type | Default | Description |
+    |-----|------|---------|-------------|
+    | `city` | string | `"sanaa"` | Your city name, used for prayer time calculations. |
+    | `country` | string | `"yemen"` | Your country, used together with `city`. |
+    | `weatherLocation` | string | `"sanaa"` | Location string passed to the weather API (can differ from `city`). |
+    | `firstDayOfWeek` | number | `6` | First day of the calendar week: `0` = Sunday, `1` = Monday … `6` = Saturday. |
+    | `usePrayerTimes` | boolean | `true` | Show Islamic prayer times in the clock and dashboard. Set to `false` to hide them. |
+  </Accordion>
+
+  <Accordion title="Network">
+    These keys configure which network interface NibrasShell monitors and how often it polls for traffic data.
+
+    | Key | Type | Default | Description |
+    |-----|------|---------|-------------|
+    | `networkMonitor` | string | `"wlp0s20f3"` | The network interface name to monitor (e.g. `eth0`, `enp3s0`). Run `ip link` to find yours. |
+    | `networkInterval` | number | `400` | Polling interval in milliseconds. Lower values give smoother graphs but use more CPU. |
+  </Accordion>
+
+  <Accordion title="AI settings">
+    NibrasShell supports multiple AI providers and lets you assign separate API keys and models to each feature area (weather, music, system monitoring). A single `aiApiKey` is used as a fallback when a feature-specific key is not set.
+
+    | Key | Type | Default | Description |
+    |-----|------|---------|-------------|
+    | `aiProvider` | string | `"gemini"` | AI backend to use. Choices: `"gemini"`, `"openai"`, `"deepseek"`, `"openrouter"`, `"ollama"`, `"local"`. |
+    | `aiApiKey` | string | `""` | Primary API key, used when no feature-specific key is set. |
+    | `weatherAiApiKey` | string | `""` | Override key for the weather assistant. Falls back to `aiApiKey` if empty. |
+    | `musicAiApiKey` | string | `""` | Override key for the music assistant. Falls back to `aiApiKey` if empty. |
+    | `systemAiApiKey` | string | `""` | Override key for the system monitoring assistant. Falls back to `aiApiKey` if empty. |
+    | `weatherAiModel` | string | `"gemini-flash-lite-latest"` | Model used for weather summaries. |
+    | `musicAiModel` | string | `"gemini-flash-lite-latest"` | Model used for music commentary. |
+    | `systemAiModel` | string | `"gemini-flash-lite-latest"` | Model used for system health analysis. |
+    | `aiPreferredLanguage` | string | `"English"` | Language for AI responses (e.g. `"Arabic"`, `"French"`). |
+    | `weatherPersona` | string | *(long default)* | System prompt persona for the weather assistant. |
+    | `musicPersona` | string | *(long default)* | System prompt persona for the music assistant. |
+
+    <Tip>
+      You can customize `weatherPersona` and `musicPersona` to change the tone and style of AI responses. The **Settings App → AI** section provides a text editor for each persona.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="System monitoring and alerts">
+    These keys control when NibrasShell raises alerts for high CPU, RAM, or temperature usage.
+
+    | Key | Type | Default | Description |
+    |-----|------|---------|-------------|
+    | `enableHighCpuAlert` | boolean | `true` | Enable visual alert when CPU usage exceeds the threshold. |
+    | `enableHighRamAlert` | boolean | `true` | Enable visual alert when RAM usage exceeds the threshold. |
+    | `enableHighTempAlert` | boolean | `true` | Enable visual alert when CPU temperature exceeds the threshold. |
+    | `cpuHighLoadThreshold` | number | `85` | CPU usage percentage (0–100) that triggers the alert. |
+    | `ramHighLoadThreshold` | number | `85` | RAM usage percentage (0–100) that triggers the alert. |
+    | `tempHighThreshold` | number | `85` | CPU temperature in °C that triggers the alert. |
+    | `playCpuAlarmSound` | boolean | `true` | Play an audible alarm on CPU threshold breach. |
+    | `playRamAlarmSound` | boolean | `true` | Play an audible alarm on RAM threshold breach. |
+    | `playTempAlarmSound` | boolean | `true` | Play an audible alarm on temperature threshold breach. |
+    | `resourceAlertCooldownMs` | number | `60000` | Minimum time in milliseconds between repeated alerts for the same resource. |
+  </Accordion>
+
+  <Accordion title="UI appearance">
+    These keys control the shell's overall layout, the top bar behavior, and workspace icon sets.
+
+    | Key | Type | Default | Description |
+    |-----|------|---------|-------------|
+    | `menuStyle` | string | `"docked_moving_bar"` | Left menu layout. Options: `"floating"`, `"docked_fixed_bar"`, `"docked_moving_bar"`. |
+    | `useBottomLauncher` | boolean | `false` | Use the bottom app launcher instead of the side launcher. |
+    | `bottomLauncherWidth` | number | `800` | Width of the bottom launcher in pixels (only applies when `useBottomLauncher` is `true`). |
+    | `topBarActiveWindowMinWidth` | number | `200` | Minimum width in pixels of the active window title in the top bar. |
+    | `topBarActiveWindowMaxWidth` | number | `400` | Maximum width in pixels of the active window title in the top bar. |
+    | `dynamicWorkspaces` | boolean | `false` | Show only workspaces that have open windows instead of all ten. |
+    | `activeWorkspacesIcons` | array | *(Nerd Font icons)* | Array of 10 icon strings for active (focused) workspaces. |
+    | `inActiveWorkspacesIcons` | array | *(Nerd Font icons)* | Array of 10 icon strings for inactive workspaces. |
+
+    <Note>
+      Workspace icon arrays must contain exactly 10 elements — one per workspace slot. Use any Nerd Font glyph or Unicode character.
+    </Note>
+  </Accordion>
+</AccordionGroup>

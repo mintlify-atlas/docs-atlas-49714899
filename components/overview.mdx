@@ -1,0 +1,72 @@
+---
+title: "NibrasShell UI components overview"
+description: "A tour of every visual layer in NibrasShell — from the top bar and smart capsule to the desktop, side panel, and notification system."
+keywords: ["NibrasShell", "UI components", "Hyprland shell", "Quickshell", "QML"]
+---
+
+NibrasShell composes its interface from a set of discrete, independently rendered windows that together form a cohesive desktop experience. Every component is instantiated as a `PanelWindow` inside `shell.qml` — the single assembly point that wires layers together — so each piece occupies its own rendering surface and can be updated without rebuilding the rest of the shell. Components communicate with each other through the `EventBus` service and shared state objects like `ConstValues`, keeping coupling low and making individual panels easy to customise or replace.
+
+## Layout overview
+
+The shell arranges its visible layers in a clear spatial hierarchy:
+
+- **Top Bar** — anchored to the full screen width at the top, showing workspaces, the active window title, system tray, network speed, and system stats.
+- **LeftBar** — a narrow icon strip anchored to the left edge, spanning the height below the top bar.
+- **LeftWindow** — an expandable side panel that slides in from the left when you click an icon in the LeftBar.
+- **Smart Capsule** — a floating interactive island positioned at the top-centre of the screen, independent of the top bar.
+- **Desktop** — a full-screen background window that hosts the wallpaper, optional depth-shadow overlay, and clock widget.
+- **Notifications** — a global overlay service that renders animated toasts in the top-right corner and maintains a notification centre inside the side panel.
+- **Bottom Launcher** — an optional app launcher that appears at the bottom of the screen.
+- **Power Menu** — a full-screen overlay for shutdown, reboot, suspend, and logout.
+
+## Components
+
+<CardGroup cols={2}>
+  <Card title="Top Bar" icon="layout-panel-top" href="/components/top-bar">
+    Workspaces, active window title, network speed, system tray, and compact system stats in a single horizontal bar.
+  </Card>
+  <Card title="Left menu" icon="panel-left" href="/components/left-menu">
+    Icon strip (LeftBar) and expandable side panel (LeftWindow) with dashboard, weather, monitoring, AI bot, and more.
+  </Card>
+  <Card title="Smart Capsule" icon="cpu" href="/components/smart-capsule">
+    An AI-powered interactive island at the top-centre with idle, expanded, and AI Overlay modes.
+  </Card>
+  <Card title="Desktop and wallpapers" icon="image" href="/components/desktop-wallpapers">
+    Full-screen background with static or dynamic wallpapers, depth-shadow effect, and a customisable clock widget.
+  </Card>
+  <Card title="Notifications" icon="bell" href="/components/notifications">
+    Animated toast notifications, do-not-disturb mode, custom alert sounds, and an in-panel notification centre.
+  </Card>
+  <Card title="App Launcher" icon="grid-2x2" href="/components/app-launcher">
+    Search and launch applications from the side panel or an optional bottom launcher overlay.
+  </Card>
+  <Card title="Power menu" icon="power" href="/components/power-menu">
+    Full-screen overlay for shutdown, reboot, suspend, and logout with a confirmation step.
+  </Card>
+</CardGroup>
+
+## Technical assembly
+
+All components are declared inside `shell.qml` using Quickshell's `Variants` helper, which spawns one instance of each `PanelWindow` per connected monitor. Single-instance panels — `LeftWindowFull`, `BottomLauncher`, `PowerMenuWindow`, and `Cheatsheet` — are created once globally to avoid repeated construction.
+
+```qml
+// shell.qml (excerpt)
+Variants {
+    model: Quickshell.screens
+    Topbar {
+        required property ShellScreen modelData
+        screen: modelData
+    }
+}
+
+// Single-instance panels
+LeftWindowFull { id: leftPanelFull }
+BottomLauncher  { id: bottomLauncherPanel }
+PowerMenuWindow { id: powerMenuWindow }
+```
+
+Inter-component communication uses `EventBus.emit` and `EventBus.on`, with event names defined in `EventNames.js` and constant indices in `ConstValues.js`. This means no component holds a direct reference to another; they react to named events instead.
+
+<Info>
+  The Settings App and Notifications overlay are also initialised once at startup via `initializeGlobalWindows()` in `shell.qml`, regardless of which screen is active.
+</Info>

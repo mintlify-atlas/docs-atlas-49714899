@@ -1,0 +1,179 @@
+---
+title: 'NibrasShell background services: the complete guide'
+description: 'Every background service powering NibrasShell — system monitoring, weather, music, clipboard, notifications, audio, network, and to-do management.'
+keywords: ['background services', 'SystemService', 'Weather', 'MusicService', 'ClipboardService', 'NotifManager', 'Audio', 'NetworkService', 'TodoService', 'NibrasShell']
+---
+
+NibrasShell runs several background services that manage system data and application state on your behalf. Each service is a QML singleton — it starts automatically with the shell, exposes reactive properties that UI components bind to, and handles its own I/O without blocking the interface. You interact with their results through the shell's panels and widgets rather than configuring them at runtime.
+
+## Services
+
+<AccordionGroup>
+  <Accordion title="SystemService — system resources and battery">
+    `SystemService` is the central hub for hardware metrics. It runs `system_monitor.py` as a persistent background process that streams JSON-encoded CPU, RAM, and temperature readings on every tick. Separate temperature data (CPU, GPU, storage) is collected via `system_diagnostics.py --action temps`.
+
+    **What it tracks:**
+
+    - **CPU usage** — emits `cpuSampled` and fires `cpuAlert` / `cpuNormal` as usage crosses your configured threshold
+    - **RAM usage** — same pattern with `ramSampled`, `ramAlert`, and `ramNormal`
+    - **Temperature** — tracks `cpuMaxTemp`, `gpuMaxTemp`, and `storageMaxTemp`; emits `temperatureSampled` and fires `tempAlert` when the maximum exceeds `tempHighThreshold`
+    - **Battery** — reads state from UPower: `batteryPercent`, `batteryState`, `isCharging`, and a matching icon glyph
+    - **Volume and brightness** — exposes `volume`, `isMuted`, and `brightness` from the `Audio` and `Brightness` services
+    - **Keyboard layout** — listens to Hyprland's socket for `activelayout` events and updates `currentLayout`
+
+    **AI integration:**
+
+    - Delegates spike analysis to `AiAnalysisService` when an alert fires
+    - Fetches AI-generated system action responses (shutdown, reboot, logout, power-profile messages) at startup via `callSystemActionAi`
+    - Runs boot analysis 3 seconds after startup via `callBootAnalysisAi`
+
+    See [AI system daemon](/services/ai-system-daemon) for the full spike-analysis flow.
+  </Accordion>
+
+  <Accordion title="Weather — forecasts and severe weather alerts">
+    `Weather` fetches current conditions and a 3-day forecast from [wttr.in](https://wttr.in) using `curl`. It then sends a filtered subset of that data to your AI provider via `callWeatherAi` for a smart summary.
+
+    **What it provides:**
+
+    - Current temperature, feels-like, humidity, wind speed and direction, pressure, UV index, and visibility
+    - Sunrise, sunset, and moon phase
+    - Per-hour forecast with chance-of-rain, snow, frost, fog, thunder, wind, and high-temperature probabilities
+    - 3-day daily forecast with min/max temperatures and representative weather icons
+
+    **AI layer:**
+
+    - `aiSummaryText` — a human-readable weather narrative
+    - `aiTrendBadge` — a short trend label (e.g. "Warming", "Storm risk")
+    - `aiTags` — categorised condition tags
+    - `aiIsUrgent` — set to `true` when the AI flags severe weather; triggers `aiUrgentAlertReceived`
+    - `aiEmotion` — an emotion token used by the shell's AI character
+
+    **Smart polling:**
+
+    The AI response can include a `system_control.next_check_minutes` field. When present, `Weather` uses that value as the next refresh interval instead of the default 15 minutes, allowing more frequent updates during fast-changing conditions and longer intervals during stable weather.
+
+    **Severe weather notifications:**
+
+    Eight typed signals fire when hourly probabilities exceed built-in thresholds: `chanceOfRainNotified`, `chanceOfSnowNotified`, `chanceOfFrostNotified`, `chanceOfFogNotified`, `chanceOfThunderNotified`, `chanceOfWindyNotified`, `chanceOfHotWeatherNotified`, and `chanceOfRemdryNotified`.
+
+    Configure your location with the `weather.location` key in `~/.nibrasshell.json`.
+  </Accordion>
+
+  <Accordion title="MusicService — MPRIS and AI commentary">
+    `MusicService` uses Quickshell's built-in MPRIS integration to track every media player running on your system simultaneously.
+
+    **What it provides:**
+
+    - `players` — live list of all active MPRIS players
+    - `activePlayer` — the currently selected player (cycle through players with `cyclePlayers()`)
+    - `title`, `artist`, `coverArt`, `fullInfo` — track metadata
+    - `isPlaying`, `position`, `length`, `progress` — playback state
+    - `recentTracks` — a rolling history of the last 20 played tracks, with timestamps
+
+    **Playback controls:**
+
+    `next()`, `previous()`, `toggle()`, and `stop()` delegate to the active MPRIS player. Keyboard shortcuts (`nextSong`, `previousSong`, `togglePlaying`, `stopPlay`) are registered with Hyprland via `NibrasShellShortcut`.
+
+    **AI commentary:**
+
+    Each time a new song starts playing, `MusicService` waits 5 seconds (configurable via `timerDelayInSeconds`) before sending a request to `callMusicAi`. The payload includes the current track, play history, the current time, volume level, and whether this is a fresh start or a resume. The AI returns an `emotion` token, a `comment` string, and a list of `tags`. On resume, there is a 5% random chance of generating a commentary to conserve API tokens.
+
+    The `analysisCompleted` signal fires whenever new AI data is ready, so UI components can react immediately.
+  </Accordion>
+
+  <Accordion title="ClipboardService — clipboard history">
+    `ClipboardService` monitors the Wayland clipboard using `wl-paste --watch`. Every time the clipboard content changes, it calls `get_clipboard.py list` to retrieve the full history and syncs the result into a `ListModel`.
+
+    **Public API:**
+
+    | Function | Description |
+    |---|---|
+    | `activate(id)` | Copy a history entry back to the clipboard |
+    | `remove(index, id)` | Delete a single entry from history |
+    | `wipe()` | Clear the entire clipboard history |
+    | `refresh()` | Manually re-fetch the history list |
+
+    The service uses a 300ms debounce timer after a delete to avoid a stale re-fetch before `get_clipboard.py` has finished writing.
+  </Accordion>
+
+  <Accordion title="NotifManager — notifications and do-not-disturb">
+    `NotifManager` implements a full D-Bus notification server using Quickshell's `NotificationServer`. It receives system notifications from any application, wraps them in typed `Notif` objects, and exposes them through `activeNotifications`.
+
+    **What it provides:**
+
+    - `activeNotifications` — live list of all currently active notification objects
+    - `notificationCount` — reactive count of active notifications
+    - `dndEnabled` — do-not-disturb toggle; when true, notification sounds are suppressed
+
+    **Notification object fields:**
+
+    Each `Notif` carries `summary`, `body`, `appName`, `appIcon`, `image`, `notifId`, `displayActions`, `time`, and `timeStr`.
+
+    **API:**
+
+    | Function | Description |
+    |---|---|
+    | `notify({summary, body, icon, urgency, tone})` | Send a notification programmatically |
+    | `playNotificationTone(tone)` | Play a sound file (respects DND) |
+    | `clearAllNotifs()` | Dismiss all active notifications |
+    | `toggleDnd()` | Toggle do-not-disturb mode |
+
+    Two signals — `notificationReceived` and `notificationClosed` — let UI components react to the notification lifecycle.
+  </Accordion>
+
+  <Accordion title="Audio and Brightness — volume and display control">
+    **Audio** (`Audio.qml`) wraps Quickshell's Pipewire integration. It exposes the default audio sink's `volume` (0.0–1.0) and `muted` state as reactive properties, and provides `setVolume(value)` to adjust output level. Unmuting happens automatically when you set a non-zero volume.
+
+    **Brightness** (`Brightness.qml`) manages display brightness across all connected monitors. It detects whether each monitor supports DDC/CI control (via `ddcutil detect`) or falls back to `brightnessctl` for built-in laptop displays. Brightness changes are applied to the currently focused monitor.
+
+    | Shortcut name | Action |
+    |---|---|
+    | `brightnessUp` | Increase focused monitor brightness by 10% |
+    | `brightnessDown` | Decrease focused monitor brightness by 10% |
+
+    `SystemService` re-exports both `volume` and `brightness` so UI widgets only need to import one service.
+  </Accordion>
+
+  <Accordion title="NetworkService — Wi-Fi and data usage">
+    `NetworkService` monitors the network interface you configure with `networkMonitor` in `~/.nibrasshell.json`. It activates its timers only when the network panel is open, keeping background CPU usage low.
+
+    **Wi-Fi management:**
+
+    - `scanWifi()` — runs `network/list_wifi.py` every 5 seconds while the panel is open and emits `wifiNetworksUpdated`
+    - `connectToWifi(ssid, password)` — connects via `network/connect_wifi.py`
+    - `disconnectWifi(ssid)` and `forgetWifi(ssid)` — manage saved connections
+    - `wifiActionFinished` signal reports success or failure with a message
+
+    **Data usage:**
+
+    - `refreshDataUsage()` — monthly and daily totals (received, sent, total) via `network/data_usage.py`
+    - `refreshLiveUsage()` — per-process real-time transfer rates via `network/live_usage.py`, sampled every 500ms
+    - `refreshHistoryUsage()` — 24-hour per-process summary, refreshed every 30 seconds
+
+    All byte values are formatted automatically (Bytes → KB → MB → GB).
+  </Accordion>
+
+  <Accordion title="TodoService — in-shell task management">
+    `TodoService` provides a persistent to-do list stored as JSON at `~/.cache/nibrasshell/todo.json` (the path is resolved by `App.todoFilePath`). Tasks are sorted automatically: urgent tasks first, then pending tasks ordered by creation time, completed tasks last.
+
+    **Public API:**
+
+    | Function | Description |
+    |---|---|
+    | `addTask(title, date, urgent)` | Add a new task |
+    | `updateTaskDate(index, date)` | Change a task's due date |
+    | `saveAndSort()` | Persist and re-sort after external modifications |
+
+    **Due tracking:**
+
+    A timer checks task due dates every 60 seconds. When a task's `dueAt` timestamp is reached, `TodoService` emits `taskDue` with a snapshot of the task. Each task is notified at most once per due time.
+
+    **AI summary:**
+
+    After any change, a 2.5-second debounce timer triggers `callTodoAi`. The AI returns a `title`, `summary`, `tags`, and `due_soon` list. These are exposed as `aiSummaryTitle`, `aiSummaryText`, `aiSummaryTags`, and `aiSummaryDueSoon`. At startup, `startupSummaryReady` fires with the initial summary so the shell can greet you with your task status.
+  </Accordion>
+</AccordionGroup>
+
+## Configuration reference
+
+Most service behaviour is controlled through `~/.nibrasshell.json`. See [user configuration](/configuration/user-config) for the complete list of keys, including thresholds, API credentials, network interface, and file paths.

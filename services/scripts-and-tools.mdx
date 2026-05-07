@@ -1,0 +1,185 @@
+---
+title: 'NibrasShell helper scripts and built-in system tools'
+description: 'Python and Bash scripts for system monitoring, wallpapers, networking, AI, and clipboard — all resolved and invoked through App.qml at runtime.'
+keywords: ['helper scripts', 'Python scripts', 'Bash scripts', 'system monitoring', 'wallpaper', 'network', 'AI gateway', 'App.qml', 'NibrasShell']
+---
+
+NibrasShell includes a collection of Python and Bash helper scripts that the shell invokes at runtime to gather system data, generate visuals, and talk to AI providers. All scripts live under `config/quickshell/scripts/python/` and `config/quickshell/scripts/`, and every call goes through `App.qml`, which provides unified path resolution so scripts work regardless of where you have installed the shell.
+
+<Note>
+  You never call these scripts directly. `App.qml` exposes them through the `App.scripts` object, and individual services import and invoke them by name. The descriptions below explain what each script does so you understand what is running on your system.
+</Note>
+
+<Tabs>
+  <Tab title="System monitoring">
+    These scripts collect hardware metrics and process information on demand. They are called by `SystemService` and `AiAnalysisService` when alerts fire or when the AI needs diagnostic data.
+
+    <AccordionGroup>
+      <Accordion title="battery_info.py — battery percentage and charge state">
+        Reads battery health from the appropriate platform source:
+
+        - **Linux** — reads from `/sys/class/power_supply/BAT0/` to get design capacity, full-charge capacity, cycle count, wear level, and temperature
+        - **macOS** — queries `ioreg` for `AppleSmartBattery` data
+        - **Windows** — uses the `wmi` module
+
+        Returns a JSON object with `percentage`, `is_charging`, `status`, `time_remaining`, `wear_level_percent`, `cycle_count`, and optional temperature data.
+      </Accordion>
+
+      <Accordion title="system_diagnostics.py — on-demand hardware diagnostics">
+        A multi-action script invoked with `--action cpu`, `--action ram`, `--action temps`, or `--action all`.
+
+        - **`--action cpu`** — uses `psutil` to sample all running processes twice with a 0.5-second interval, then returns the top 20 by normalised CPU percentage (divided by logical core count)
+        - **`--action ram`** — returns the top 20 processes by memory percentage and resident set size (MB)
+        - **`--action temps`** — collects CPU temperatures via `psutil.sensors_temperatures()`, GPU temperatures via `nvidia-smi` or `lm-sensors`, and storage temperatures via `psutil` and `smartctl`; returns per-device readings plus `cpu_max_temp`, `gpu_max_temp`, and `storage_max_temp`
+
+        This is the primary diagnostic script called by `AiAnalysisService` when assembling the AI spike-analysis payload.
+      </Accordion>
+
+      <Accordion title="system_monitor.py — continuous metric stream">
+        Runs as a persistent process inside `SystemService`. Streams a JSON line per tick containing current CPU usage, RAM usage, and temperature. `SystemService` parses each line and updates its reactive properties.
+      </Accordion>
+
+      <Accordion title="Shell metric scripts">
+        Quick single-value reads used for lightweight polling:
+
+        | Script | Output |
+        |---|---|
+        | `cpu_usage.sh` | Current CPU usage percentage |
+        | `ram_usage.sh` | Current RAM usage percentage |
+        | `temp.sh` | Current hardware temperature |
+        | `internet.sh` | Current network interface speed (also available as `network/live_usage.py`) |
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Wallpaper and depth">
+    These scripts power NibrasShell's dynamic wallpaper system, Material You colour generation, and the AI depth-overlay effect that layers your wallpaper behind shell widgets.
+
+    <AccordionGroup>
+      <Accordion title="scan_wallpapers.py — wallpaper directory scanner">
+        Scans your configured wallpaper directory and returns a list of image file paths. `App.qml` uses this list to populate the wallpaper picker in the settings panel.
+      </Accordion>
+
+      <Accordion title="m3/dynamic-m3.py — Material You colour generation">
+        Extracts a dominant colour palette from your current wallpaper and generates a full Material You (M3) colour scheme. The pipeline includes:
+
+        - `m3/create_thumbnail.py` — creates a small thumbnail for fast colour sampling
+        - `m3/css_theme.py` — writes CSS custom properties for the shell's QML theme
+        - `m3/gtk_theme.py` — applies the palette to your GTK theme
+        - `m3/kitty_theme.py` — applies the palette to Kitty terminal colours
+        - `m3/plasma_color.py` — applies the palette to KDE Plasma colour schemes
+
+        Run this automatically when you change your wallpaper to keep your entire desktop in sync.
+      </Accordion>
+
+      <Accordion title="create_depth_image_rembg.py — AI-based depth overlay">
+        Uses the `rembg` library to remove the background from your wallpaper and create a foreground cutout. NibrasShell composites this cutout in front of shell widgets to create a parallax depth effect where your wallpaper subject appears to float above the interface.
+
+        This script produces higher-quality results but requires `rembg` and its model weights to be installed.
+      </Accordion>
+
+      <Accordion title="create_depth_image_opencv.py — OpenCV depth overlay">
+        An alternative depth-overlay generator that uses OpenCV for background removal. Faster than `rembg` and has no large model dependency, but may produce lower-quality cutouts on complex subjects.
+      </Accordion>
+
+      <Accordion title="overlay_cache_images_cleaner.py — depth cache cleanup">
+        Scans the depth-overlay cache directory and removes files that no longer correspond to an existing wallpaper. Run this periodically or after changing wallpapers to free up disk space.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Network">
+    Network scripts are called by `NetworkService` when the network panel is open. They wrap system tools (`nmcli`, `nethogs`, `vnstat`) and return structured JSON so `NetworkService` can update its reactive models.
+
+    <AccordionGroup>
+      <Accordion title="network/list_wifi.py — scan available networks">
+        Scans for nearby Wi-Fi networks and returns a JSON array of objects with fields including `ssid`, `signal`, `security`, and `connected`. `NetworkService` calls this every 5 seconds while the network panel is open.
+      </Accordion>
+
+      <Accordion title="network/connect_wifi.py — connect or disconnect">
+        Accepts `--command connect`, `--command disconnect`, or `--command delete` along with `--ssid`, `--password`, and `--interface`. Returns a JSON object with `status` (`"success"` or `"error"`) and a `message`. On success, `NetworkService` triggers an immediate Wi-Fi rescan.
+      </Accordion>
+
+      <Accordion title="network/data_usage.py — total data usage">
+        Returns monthly and optionally daily cumulative data usage for your configured network interface. Output includes `usage_bytes.received`, `usage_bytes.sent`, and `usage_bytes.total` along with the reporting `period`.
+      </Accordion>
+
+      <Accordion title="network/live_usage.py — real-time per-process speed">
+        Samples per-process network activity and returns the top processes ranked by total transfer rate. Each entry includes `pid`, `name`, `rx_rate_bps`, `tx_rate_bps`, `total_rate_bps`, `bytes_recv`, `bytes_sent`, and `connections_count`. `NetworkService` polls this every 500ms while the Live tab is active.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="AI gateway">
+    The AI gateway scripts form the bridge between QML services and your configured AI provider. `AiService` invokes `ai/main.py` for every AI request and parses the returned JSON.
+
+    <AccordionGroup>
+      <Accordion title="ai/main.py — universal AI provider gateway">
+        The central entry point for all AI calls. It accepts:
+
+        | Argument | Description |
+        |---|---|
+        | `--message` | The prompt text to send |
+        | `--preset` | A named preset that sets the system instruction, temperature, and JSON mode |
+        | `--provider` | Override the provider: `gemini`, `openrouter`, `openai`, `deepseek`, `ollama`, `local` |
+        | `--api_key` | API key (overrides the value from `~/.nibrasshell.json`) |
+        | `--model` | Model name |
+        | `--base_url` | Custom API base URL for local/self-hosted providers |
+        | `--json_mode` | Request structured JSON output |
+        | `--temperature` | Sampling temperature (default: 0.7) |
+        | `--history` | Conversation history as a JSON array |
+        | `--system_instruction` | Custom system prompt |
+
+        The script outputs a single JSON line: `{"success": true, "response": {...}}` on success or `{"success": false, "error": "..."}` on failure. When `--json_mode` is set, `main.py` strips markdown code fences, finds the first balanced JSON object in the response, and optionally repairs it with `json-repair` if installed.
+
+        Provider modules live alongside `main.py`:
+
+        | Module | Provider |
+        |---|---|
+        | `gemini_provider.py` | Google Gemini |
+        | `openrouter_provider.py` | OpenRouter |
+        | `openai_provider.py` | OpenAI and DeepSeek |
+        | `ollama_provider.py` | Ollama (local) |
+        | `local_provider.py` | Generic local endpoint |
+      </Accordion>
+
+      <Accordion title="ai/list-gemini.py — list available Gemini models">
+        Queries the Gemini API with your configured key and prints a list of available model names. Use this to discover which Gemini models you can set as `systemAiModel` or `aiModel` in `~/.nibrasshell.json`.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="Media and clipboard">
+    <AccordionGroup>
+      <Accordion title="playerctl.sh — media player control">
+        A thin Bash wrapper around `playerctl` that forwards play, pause, next, previous, and stop commands to the active media player. `MusicService` registers keyboard shortcuts that call into this script via `App.qml`.
+      </Accordion>
+
+      <Accordion title="get_clipboard.py — clipboard history management">
+        Manages a persistent clipboard history file. Accepts four sub-commands:
+
+        | Sub-command | Description |
+        |---|---|
+        | `list` | Print the full history as a JSON array of `{id, text, type}` objects |
+        | `activate <id>` | Write the entry with the given ID back to the Wayland clipboard |
+        | `delete <id>` | Remove a single entry from the history file |
+        | `wipe` | Delete all entries from the history file |
+
+        `ClipboardService` calls `list` whenever `wl-paste --watch` detects a clipboard change, and calls the other sub-commands in response to user actions in the clipboard panel.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+## Path resolution via App.qml
+
+All script paths are resolved through `App.scripts` in `App.qml`. This object maps logical names to absolute paths at runtime, so services never hard-code file system paths. When you install NibrasShell to a non-default location, updating `App.qml` is the only change needed to keep every service working correctly.
+
+```qml
+// Example — how AiAnalysisService references a script
+AiService.sendRequest(App.scripts.python.callSpikeAnalysisAi, ["--message", JSON.stringify(payload)], ...)
+```
+
+<Tip>
+  If you add a custom script, register it in `App.qml` under `App.scripts` so it inherits the same path-resolution behaviour. Avoid referencing script paths directly inside service files.
+</Tip>

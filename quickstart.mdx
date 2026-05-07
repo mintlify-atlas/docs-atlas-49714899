@@ -1,81 +1,124 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
-icon: 'rocket'
+title: "Get started with NibrasShell"
+description: "Configure NibrasShell in minutes — set your username and location, connect an AI provider, pick a theme, and explore your shell with the built-in cheatsheet."
 ---
 
-## Get started in three steps
+This guide walks you through everything you need to do after installing NibrasShell to get a fully working, personalized shell. By the end you will have your identity and location configured, an AI provider connected, a theme selected, and a solid understanding of how to discover the shell's shortcuts and features. If you have not installed NibrasShell yet, start with the [installation guide](/installation).
 
-Get your documentation site running locally and make your first customization.
+<Tip>
+  The easiest way to configure NibrasShell is through the built-in **Settings App** (Control Hub). It provides a visual interface for every option covered in this guide, so you do not need to edit `~/.nibrasshell.json` by hand unless you prefer to.
+</Tip>
 
-### Step 1: Set up your local environment
+<Steps>
+  <Step title="Install NibrasShell">
+    If you have not already installed NibrasShell, clone the repository and run the automated installer:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```bash
+    git clone --depth 1 https://github.com/AhmedSaadi0/NibrasShell.git
+    cd NibrasShell/nibras_installer
+    python main.py
+    ```
 
-### Step 2: Deploy your changes
+    Select **1** to install dependencies, then **2** to install NibrasShell. The installer will guide you through creating `~/.nibrasshell.json` at the end. See the [installation guide](/installation) for full details and distro-specific notes.
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Set up your user config">
+    NibrasShell reads your personal settings from `~/.nibrasshell.json`. The installer creates this file for you, but you can edit it at any time. The most important fields for initial setup are your name, location, and wallpaper paths.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    Here is the core structure of `~/.nibrasshell.json`:
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```json
+    {
+      "username": "Ahmed",
+      "subtitle": "Developer",
+      "profilePicture": "/home/ahmed/Pictures/profile.png",
+      "networkMonitor": "wlp0s20f3",
+      "networkInterval": 400,
+      "weatherLocation": "Sana'a",
+      "city": "Sana'a",
+      "country": "Yemen",
+      "usePrayerTimes": false,
+      "aiProvider": "gemini",
+      "aiApiKey": "YOUR_API_KEY_HERE",
+      "aiPreferredLanguage": "English"
+    }
+    ```
 
-### Step 3: Go live
+    Set `username` to your name — it appears in the welcome message on the shell. Set `city` and `country` so the weather widget can show accurate forecasts. Set `networkMonitor` to the name of your primary network interface (run `ip link` to find it).
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    <Note>
+      To regenerate or update `~/.nibrasshell.json` interactively, run the installer again and choose option **5** (Create/Edit User Config).
+    </Note>
+  </Step>
+
+  <Step title="Connect an AI provider">
+    NibrasShell's AI daemon and Smart Capsule features require an API key from a supported AI provider. Set `aiProvider` and `aiApiKey` in `~/.nibrasshell.json`:
+
+    ```json
+    {
+      "aiProvider": "gemini",
+      "aiApiKey": "your-gemini-api-key",
+      "aiPreferredLanguage": "English"
+    }
+    ```
+
+    The AI system uses separate keys for different features. You can optionally set dedicated keys for music and weather AI analytics:
+
+    ```json
+    {
+      "aiApiKey": "your-main-key",
+      "musicAiApiKey": "your-music-key",
+      "weatherAiApiKey": "your-weather-key",
+      "systemAiApiKey": "your-system-key"
+    }
+    ```
+
+    Set `aiPreferredLanguage` to the language you want AI responses delivered in — for example `"English"`, `"Arabic"`, or `"Czech"`.
+
+    <Warning>
+      Keep your API keys out of version control. Never commit `~/.nibrasshell.json` to a public repository.
+    </Warning>
+  </Step>
+
+  <Step title="Pick a theme">
+    NibrasShell supports Material 3 dynamic color generation from your wallpaper, as well as several hand-crafted built-in themes. Open the **Settings App → Appearance** to switch themes visually and set your wallpaper folder.
+
+    NibrasShell supports static images, GIFs, and video wallpapers. Set your wallpaper from the **Settings App → Wallpapers** section — select a local image, browse downloaded wallpapers, or search Wallhaven directly.
+
+    Built-in themes (selectable from the Settings App) include:
+
+    - **Material / Material You** — Dynamic palette generated from your wallpaper
+    - **Dracula** — Purple-toned dark theme
+    - **Catppuccin** — Soft pastel palette
+    - **Nord** — Cool Arctic tones
+    - **Gruvbox** — Warm retro palette
+    - **Tokyo Night** — Deep blue-purple cityscape palette
+
+    See [Themes and color schemes](/theming/themes-and-colors) for the full list of 8 preset themes and customization options.
+  </Step>
+
+  <Step title="Explore shortcuts with the cheatsheet">
+    Once your shell is running, open the **Cheatsheet** overlay to see all available keyboard shortcuts and discover every feature of NibrasShell. The cheatsheet is built into the shell — you do not need to look anything up externally.
+
+    <Tip>
+      You can find the cheatsheet shortcut by looking at the top bar or left menu. All shortcuts available in NibrasShell are listed inside the Cheatsheet window.
+    </Tip>
+  </Step>
+</Steps>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="UI Components" icon="table-layout" href="/components/overview">
+    Learn how the Top Bar, Smart Capsule, Left Menu, and Desktop components work.
+  </Card>
+  <Card title="Theming" icon="palette" href="/theming/themes-and-colors">
+    Go deeper into Material 3 color generation and theme customization.
+  </Card>
+  <Card title="AI & Services" icon="brain" href="/services/ai-system-daemon">
+    Understand how the AI daemon monitors your system and when it fires alerts.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/user-config">
+    See the full reference for every field in `~/.nibrasshell.json`.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

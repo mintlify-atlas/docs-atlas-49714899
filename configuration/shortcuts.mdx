@@ -1,0 +1,65 @@
+---
+title: "NibrasShell keyboard shortcuts and Hyprland key bindings"
+description: "All NibrasShell internal shortcut names, what they do, and how to bind each one to a key combination in your Hyprland configuration."
+keywords: ["shortcuts", "keybindings", "Hyprland binds", "NibrasShell shortcuts", "openSettings", "toggleMediaIsland"]
+---
+
+NibrasShell actions are bound to Hyprland keybinds, not managed internally. The shell exposes a set of named shortcut identifiers — like `openSettings` or `toggleMediaIsland` — and you map each one to a key combination in your `hyprland.conf`. This keeps key assignment fully in your hands while NibrasShell handles the action logic.
+
+## Internal shortcut names
+
+The table below lists every shortcut NibrasShell recognizes, along with a description of what it does when triggered.
+
+| Shortcut name | Description |
+|---------------|-------------|
+| `openSettings` | Opens the built-in **Settings App**. |
+| `openCheatsheet` | Opens the **Cheatsheet** overlay showing all active Hyprland keybindings. |
+| `toggleMediaIsland` | Shows or hides the **Media Island** — the expanded music playback capsule. |
+| `toggleWeatherIsland` | Shows or hides the **Weather Island** — the expanded weather detail capsule. |
+| `toggleBottomLauncher` | Shows or hides the bottom application launcher. |
+| `brightnessUp` | Increases screen brightness by one step. |
+| `brightnessDown` | Decreases screen brightness by one step. |
+| `nextSong` | Skips to the next track in the active media player. |
+| `previousSong` | Goes back to the previous track in the active media player. |
+| `togglePlaying` | Toggles play/pause in the active media player. |
+| `stopPlay` | Stops playback in the active media player. |
+| `switchPlayer` | Cycles to the next available media player source. |
+
+## Binding shortcuts in Hyprland
+
+Hyprland manages all key combinations. Add `bind` entries to your `hyprland.conf` (usually at `~/.config/hypr/hyprland.conf`) using the pattern below:
+
+```ini ~/.config/hypr/hyprland.conf
+# Open NibrasShell Settings
+bindd = SUPER, s, Show NibrasShell settings, global, nibrasshell:openSettings
+
+# Open the Cheatsheet overlay
+bindd = SUPER, slash, Show NibrasShell cheatsheet, global, nibrasshell:openCheatsheet
+
+# Toggle the Media Island
+bindd = SUPER, p, Show media player capsule, global, nibrasshell:toggleMediaIsland
+
+# Toggle the Weather Island
+bindd = SUPER, w, Show weather capsule, global, nibrasshell:toggleWeatherIsland
+
+# Toggle the bottom launcher (panel toggle via IPC)
+bindd = SUPER, r, Show application launcher, exec, quickshell ipc call LeftBar toggleApplauncherMenu
+
+# Brightness controls
+bindd = , XF86MonBrightnessUp, Increase brightness, global, nibrasshell:brightnessUp
+bindd = , XF86MonBrightnessDown, Decrease brightness, global, nibrasshell:brightnessDown
+
+# Media controls
+bindd = , XF86AudioPlay, Play/Pause, global, nibrasshell:togglePlaying
+bindd = , XF86AudioNext, Next track, global, nibrasshell:nextSong
+bindd = , XF86AudioPrev, Previous track, global, nibrasshell:previousSong
+bindd = , XF86AudioStop, Stop playback, global, nibrasshell:stopPlay
+```
+
+<Note>
+  NibrasShell registers its actions as Quickshell global shortcuts using the `nibrasshell:<action>` namespace. Bind them with `global, nibrasshell:<shortcutName>` in your `hyprland.conf`. Panel-toggle actions (like the app launcher) use `exec, quickshell ipc call LeftBar <action>` instead, since they target a specific component.
+</Note>
+
+<Tip>
+  To see all keybindings currently active on your system — including the ones you configured above — open the **Cheatsheet** overlay with your `openCheatsheet` binding. It reads directly from Hyprland's runtime bind list.
+</Tip>

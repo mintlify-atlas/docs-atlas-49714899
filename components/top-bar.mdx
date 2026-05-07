@@ -1,0 +1,61 @@
+---
+title: "Top Bar: NibrasShell's status bar"
+description: "Configure the top bar's workspace strip, active window title, system tray, network speed indicator, and compact system-stats widget."
+keywords: ["top bar", "status bar", "workspaces", "system tray", "NibrasShell"]
+---
+
+The **Top Bar** is a `PanelWindow` anchored across the full width of each monitor, sitting flush at the top of the screen. It is defined in `bars/Topbar.qml` and renders four main sections: a left group containing the system tray, network speed indicator, and active window title; a spacer that pushes content to both edges; and a right group containing compact system monitors and the workspace strip. Its height is driven by `theme.dimensions.barHeight`, so it scales automatically when you switch themes.
+
+## What the top bar shows
+
+<AccordionGroup>
+  <Accordion title="System tray">
+    The **System Tray** sits at the far left and displays icons for running tray applications. Each icon is rendered with a drop shadow via the `Shadow` effect layer.
+  </Accordion>
+  <Accordion title="Network speed indicator">
+    The **Network Speed Indicator** shows current upload and download throughput next to the system tray. It updates in real time and collapses gracefully on narrow layouts.
+  </Accordion>
+  <Accordion title="Active window title">
+    The **Active Window** widget displays the title of the currently focused window. You can control how wide this widget grows using the `topBarActiveWindowMinWidth` and `topBarActiveWindowMaxWidth` config keys.
+  </Accordion>
+  <Accordion title="System monitors">
+    The **Monitors** widget shows a compact row of CPU usage, RAM usage, temperature, and battery level. It lives inside a `Flickable` container with a maximum width of 300 px, and scrolls horizontally if the content overflows.
+  </Accordion>
+  <Accordion title="Workspaces">
+    The **Workspaces** strip renders one button per Hyprland workspace. When you have more workspaces than can fit, the strip scrolls horizontally — you can scroll it with the mouse wheel or by dragging. The maximum visible width is 400 px.
+  </Accordion>
+</AccordionGroup>
+
+## Configuration
+
+All top-bar options live in your user config file. The relevant keys are:
+
+| Config key | Type | Description |
+|---|---|---|
+| `topBarActiveWindowMinWidth` | `int` | Minimum pixel width of the active window title widget. |
+| `topBarActiveWindowMaxWidth` | `int` | Maximum pixel width of the active window title widget. |
+| `dynamicWorkspaces` | `bool` | When `true`, the workspace strip only shows workspaces that currently have open windows, plus one empty slot. |
+| `activeWorkspacesIcons` | `array` | Array of 10 Nerd Font icon strings for active (focused) workspaces, one per workspace slot. |
+| `inActiveWorkspacesIcons` | `array` | Array of 10 Nerd Font icon strings for inactive workspaces. |
+
+### Example
+
+```json
+{
+  "topBarActiveWindowMinWidth": 200,
+  "topBarActiveWindowMaxWidth": 400,
+  "dynamicWorkspaces": true,
+  "activeWorkspacesIcons": ["󰋜", "󰿣", "󰂔", "󰉋", "󱙋", "󰭹", "󱍙", "󰺵", "󱋡", "󰙨"],
+  "inActiveWorkspacesIcons": ["", "󰿤", "󰂕", "󰉖", "󱙌", "󰻞", "󱍚", "󰺶", "󱋢", "󰤑"]
+}
+```
+
+## Layout behaviour
+
+- The bar adapts to the available screen width; all child widgets use `Layout.preferredWidth` with animated transitions so resizing is smooth.
+- Workspace buttons support animated scrolling via a `WheelHandler` attached to the horizontal `Flickable`.
+- Width changes on the monitors widget animate with an `OutBack` easing curve over 450 ms, giving a subtle spring feel when widgets appear or disappear.
+
+<Tip>
+  Set `dynamicWorkspaces: true` to keep the workspace strip compact — only occupied workspaces and one spare slot will be shown, reducing visual clutter on large workspace counts.
+</Tip>

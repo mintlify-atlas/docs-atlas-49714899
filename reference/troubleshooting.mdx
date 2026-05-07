@@ -1,0 +1,83 @@
+---
+title: 'Troubleshoot common NibrasShell issues'
+description: 'Step-by-step fixes for the most common NibrasShell problems, covering UI, weather, AI, clipboard, brightness, networking, music, and depth effects.'
+keywords: ['troubleshooting', 'fix', 'errors', 'issues', 'debug', 'NibrasShell']
+---
+
+Most NibrasShell problems fall into a small number of categories: a missing dependency, a misconfigured value in `~/.nibrasshell.json`, or a service that isn't running. Work through the relevant section below, then check the Quickshell log output for any error messages that point to the root cause.
+
+<Tip>
+Run `quickshell` from a terminal to see live log output. Error and warning lines will appear inline as the shell starts and as you interact with it.
+</Tip>
+
+<AccordionGroup>
+  <Accordion title="UI elements not appearing">
+    If panels, bars, or other UI elements are missing after startup:
+
+    1. Confirm Quickshell is actually running. Check with `pgrep -a quickshell` or look for it in your process list.
+    2. Look for errors in the Quickshell log — specifically any line mentioning `ThemeManager`. If `ThemeManager` fails to load the initial theme, the main UI loader never activates.
+    3. Verify that `~/.nibrasshell.json` is valid JSON. A syntax error in the config file will prevent `ThemeManager` from reading it.
+    4. Try restarting Quickshell: `pkill quickshell && quickshell`.
+  </Accordion>
+
+  <Accordion title="Weather not working">
+    If the weather widget shows no data or an error:
+
+    1. Confirm you have an active internet connection.
+    2. Open `~/.nibrasshell.json` and check the `weatherLocation` field. It should contain a valid city name or coordinates recognised by the weather backend.
+    3. Save the file and reload the shell. `ThemeManager` and services re-read the config on restart.
+  </Accordion>
+
+  <Accordion title="AI features not responding">
+    If the AI assistant or Smart Capsule AI reactions produce no output:
+
+    1. Open the Settings panel and verify that `aiProvider` is set to your chosen provider (e.g., `openai`, `groq`).
+    2. Confirm that `aiApiKey` contains a valid key for that provider.
+    3. Check that the model name you've configured exists on your chosen provider — an invalid model name is a common cause of silent failures.
+    4. Look for network errors in the Quickshell log, which may indicate the API endpoint is unreachable.
+  </Accordion>
+
+  <Accordion title="Clipboard not working">
+    If the clipboard manager shows nothing or fails to paste:
+
+    1. Check that `wl-clipboard` is installed by running `which wl-paste` in a terminal. If the command is not found, install `wl-clipboard` with your package manager.
+    2. Restart Quickshell after installing the package.
+  </Accordion>
+
+  <Accordion title="Brightness control failing">
+    If the brightness OSD appears but adjustments have no effect:
+
+    1. Confirm `brightnessctl` is installed: `which brightnessctl`.
+    2. For built-in laptop displays, `brightnessctl` alone is sufficient. For external monitors connected via DisplayPort or HDMI, install `ddcutil` as well — NibrasShell will use it to send DDC/CI brightness commands.
+    3. If `ddcutil` is installed but still not working, run `ddcutil detect` to confirm your monitor supports DDC/CI.
+  </Accordion>
+
+  <Accordion title="Network info missing">
+    If the network widget shows no interface data or connection status:
+
+    1. Confirm NetworkManager is running: `systemctl status NetworkManager`.
+    2. Open `~/.nibrasshell.json` and check the `networkMonitor` field. It should match the interface name shown by `ip link` (e.g., `eth0`, `wlan0`, `enp3s0`).
+    3. Update the interface name if it doesn't match and restart Quickshell.
+  </Accordion>
+
+  <Accordion title="Music controls not working">
+    If the media controls in the Smart Capsule or left panel don't respond:
+
+    1. Confirm `playerctl` is installed: `which playerctl`.
+    2. Run `playerctl status` to check whether any MPRIS-compatible player is currently active. NibrasShell's music service requires a running player that exposes an MPRIS2 D-Bus interface. Common compatible players include Spotify, VLC, Firefox, and `mpd` with the `mpd-mpris` bridge.
+    3. If multiple players are running, check which one `playerctl` targets by default with `playerctl -l`.
+  </Accordion>
+
+  <Accordion title="Depth effect not generating">
+    If wallpapers display without the depth layer effect:
+
+    1. The depth effect requires either the `rembg` Python package (for background removal) or OpenCV (`python-opencv`), depending on which generation method you have selected in settings.
+    2. Verify the required package is installed in the Python environment that NibrasShell uses: `python3 -c "import rembg"` or `python3 -c "import cv2"`.
+    3. Install the missing package with `pip install rembg` or your distro's package manager for `python-opencv`.
+    4. Once installed, re-set your wallpaper from the Settings panel to trigger a fresh depth-effect generation. Generated images are cached in `~/.cache/nibrasshell/`.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+If none of the steps above resolve your issue, open a new issue on the [NibrasShell GitHub repository](https://github.com/AhmedSaadi0/NibrasShell) and include the relevant lines from your Quickshell log output.
+</Warning>

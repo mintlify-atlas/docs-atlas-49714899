@@ -1,0 +1,75 @@
+---
+title: "Left menu and side panel"
+description: "Learn how the LeftBar icon strip and LeftWindow expandable panel work together, and what each section inside the side panel provides."
+keywords: ["left menu", "side panel", "LeftBar", "LeftWindow", "NibrasShell"]
+---
+
+The left side of the NibrasShell interface is split into two cooperating components: the **LeftBar**, a slim icon strip anchored to the left edge of each monitor, and the **LeftWindow**, a wider expandable panel that slides in when you activate a section. Both are defined in `bars/LeftBar.qml` and `windows/leftwindow/`, and they communicate through the shared `LeftMenuStatus` state object and `EventBus` events.
+
+## LeftBar: the icon strip
+
+The LeftBar is a `PanelWindow` that spans the full height of the screen below the top bar. It renders three vertical button groups, each backed by a `ListModel`:
+
+| Group | Buttons |
+|---|---|
+| **Top** (system) | Dashboard, Notifications, Weather, Monitors, Network |
+| **Middle** (productivity) | Clipboard, Todo, Translator, AI Bot |
+| **Bottom** (apps) | All Apps, Power |
+
+Clicking a button opens the corresponding section in the **LeftWindow**. Clicking the same button again closes the panel. The **Power** button is special: it emits `TOGGLE_POWER_MENU` instead of opening the side panel, so the power menu appears as a full-screen overlay without expanding the LeftWindow.
+
+## LeftWindow: the expandable panel
+
+When you activate a section, the LeftWindow slides in from the left and displays the matching content. The panel hosts these sections:
+
+<AccordionGroup>
+  <Accordion title="Dashboard">
+    Quick-switch between themes and control the current power mode. Useful for adapting the shell to different lighting conditions or battery states without opening the Settings App.
+  </Accordion>
+  <Accordion title="Notifications">
+    A scrollable list of all received notifications with an unread counter, a clear-all button, and a do-not-disturb toggle. The LeftBar icon badge mirrors the unread count in real time via `NotifManager.notificationCount`.
+  </Accordion>
+  <Accordion title="Weather">
+    Current conditions and forecast data fetched from your configured weather source, with AI-generated summaries shown in the Smart Capsule.
+  </Accordion>
+  <Accordion title="Monitors">
+    Live graphs for CPU, RAM, temperature, and battery, plus a table of the top resource-consuming processes. Spike Analysis uses the AI bot to explain sudden load increases.
+  </Accordion>
+  <Accordion title="Network">
+    Periodically scans for available Wi-Fi networks. You can connect, disconnect, or forget networks from this panel. It also shows daily and monthly data usage totals.
+  </Accordion>
+  <Accordion title="Clipboard">
+    Displays your clipboard history. You can re-paste any previous entry, delete individual items, or clear the entire history.
+  </Accordion>
+  <Accordion title="Todo">
+    Task list with due dates, priority levels, and completion states. Tasks are sorted automatically by priority so the most important items surface first.
+  </Accordion>
+  <Accordion title="Translator">
+    In-panel text translation powered by the configured AI backend.
+  </Accordion>
+  <Accordion title="AI Bot">
+    A chat interface to the configured AI model, accessible without leaving the shell.
+  </Accordion>
+  <Accordion title="App Launcher">
+    Inline application search and launch. If `useBottomLauncher` is `true`, clicking **All Apps** opens the bottom launcher overlay instead of this in-panel view.
+  </Accordion>
+</AccordionGroup>
+
+## Menu style
+
+The `menuStyle` config key controls how the LeftWindow interacts with the rest of the desktop:
+
+| Value | Behaviour |
+|---|---|
+| `floating` | The panel overlays the desktop without pushing any content. |
+| `docked` | The panel pushes the desktop container and the LeftBar shifts right by `menuWidth` pixels. |
+
+```json
+{
+  "menuStyle": "docked"
+}
+```
+
+<Note>
+  In **docked** mode, `bars/LeftBar.qml` animates `margins.left` to `theme.dimensions.menuWidth` when the panel opens, using a Bézier easing curve defined in `AnimationConfig`.
+</Note>

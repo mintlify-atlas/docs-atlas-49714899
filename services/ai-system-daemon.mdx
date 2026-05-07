@@ -1,0 +1,105 @@
+---
+title: 'AI system daemon: smart system resource monitoring'
+description: 'The AI daemon watches CPU, RAM, and temperature in the background, using smart cooldowns to deliver AI root-cause alerts without notification spam.'
+keywords: ['AI daemon', 'system monitoring', 'CPU alert', 'RAM alert', 'temperature spike', 'AiAnalysisService', 'NibrasShell']
+---
+
+The AI System Daemon runs silently in the background, continuously watching your system resources and stepping in the moment something looks wrong. When CPU usage, RAM consumption, or hardware temperature crosses a threshold, the daemon collects a snapshot of the top offending processes, sends that data to your configured AI provider, and surfaces a plain-language root-cause analysis — all without you having to open a terminal.
+
+## How it works
+
+NibrasShell wires together two QML singletons — `SystemService` and `AiAnalysisService` — to build a closed monitoring loop.
+
+<Steps>
+  <Step title="Continuous sampling">
+    `SystemService` runs `system_monitor.py` as a persistent background process. Every tick it emits updated CPU usage, RAM usage, and maximum temperature values. Separate temperature readings are gathered for CPU, GPU, and storage via `system_diagnostics.py`.
+  </Step>
+  <Step title="Threshold detection">
+    Each metric is compared against your configured thresholds (`cpuHighLoadThreshold`, `ramHighLoadThreshold`, `tempHighThreshold`). When a value crosses its threshold, `SystemService` emits a typed alert signal — `cpuAlert`, `ramAlert`, or `tempAlert`.
+  </Step>
+  <Step title="Process diagnostics">
+    `AiAnalysisService` receives the alert and immediately calls back into `SystemService` to run `system_diagnostics.py --action cpu` or `--action ram`. This yields a ranked list of the top processes currently consuming the resource. Temperature spikes additionally collect per-device readings for CPU, GPU, and storage.
+  </Step>
+  <Step title="AI root-cause analysis">
+    The collected snapshot — current value, previous value, delta, threshold, top processes, and temperature data — is serialised as JSON and sent to `ai/main.py` via `AiService`. Your AI provider receives the payload and returns a structured analysis including a title, narrative, root-cause hypothesis, confidence score, thermal risk level, process anomaly details, and a list of recommended actions.
+  </Step>
+  <Step title="Smart cooldowns">
+    Two independent cooldown layers prevent alert floods. A **spike cooldown** (`resourceAlertCooldownMs`) gates how often a new spike event can be created for a given resource type. A **process cooldown** tracks the top process by `pid:name` key — if the same process already triggered an alert recently, the duplicate is silently dropped. Temperature spikes use a longer fixed cooldown of 300 seconds.
+  </Step>
+  <Step title="Boot analysis">
+    Three seconds after shell startup, `SystemService` calls `AiService` with `callBootAnalysisAi` to summarise what ran at startup. The result populates `bootStatusTitle`, `aiBootSummary`, `bootTimeText`, and `bootLogsModel`, giving you an at-a-glance picture of your last boot without digging through journal logs.
+  </Step>
+</Steps>
+
+## Event model
+
+`AiAnalysisService` keeps an in-memory list of up to 50 analysis events (`maxEventsCount`). Each entry starts with `isLoading: true` and `aiAnalysis: "Analyzing... Please wait."`. Once the AI responds, the entry is updated in place with the full structured result. The event list is available to any UI component that imports `AiAnalysisService`.
+
+Each event carries:
+
+| Field | Description |
+|---|---|
+| `type` | `CPU`, `RAM`, or `TEMP` |
+| `value` | Current metric value at alert time |
+| `severity` | `NORMAL`, `WARNING`, or `CRITICAL` |
+| `aiTitle` | Short AI-generated headline |
+| `aiNarrative` | Plain-language description of the event |
+| `aiRootCause` | Root-cause hypothesis |
+| `aiConfidence` | Confidence score (0–100) |
+| `aiThermalRisk` | Risk level for temperature events |
+| `aiProcessName` | Name of the anomalous process |
+| `aiActions` | List of recommended remediation actions |
+
+## Configuration
+
+All daemon settings live in `~/.nibrasshell.json`. The relevant keys are:
+
+<AccordionGroup>
+  <Accordion title="AI provider settings">
+    | Key | Description |
+    |---|---|
+    | `aiProvider` | Your AI provider name: `gemini`, `openai`, `deepseek`, `openrouter`, `ollama`, or `local` |
+    | `aiApiKey` | Default API key used across all AI features |
+    | `systemAiApiKey` | Override API key used specifically for system analysis requests |
+    | `systemAiModel` | Model to use for system spike analysis (e.g. a fast, low-latency model) |
+  </Accordion>
+  <Accordion title="Alert toggles">
+    | Key | Type | Description |
+    |---|---|---|
+    | `enableHighCpuAlert` | boolean | Enable or disable CPU high-load alerts |
+    | `enableHighRamAlert` | boolean | Enable or disable RAM high-load alerts |
+  </Accordion>
+  <Accordion title="Thresholds">
+    | Key | Type | Description |
+    |---|---|---|
+    | `cpuHighLoadThreshold` | number (0–100) | CPU percentage that triggers an alert |
+    | `ramHighLoadThreshold` | number (0–100) | RAM percentage that triggers an alert |
+    | `tempHighThreshold` | number (°C) | Temperature that triggers a thermal alert (default: 85°C) |
+    | `resourceAlertCooldownMs` | number (ms) | Minimum time between repeated alerts for the same resource |
+  </Accordion>
+  <Accordion title="Sound alerts">
+    | Key | Type | Description |
+    |---|---|---|
+    | `playCpuAlarmSound` | boolean | Play an alarm sound when a CPU alert fires |
+    | `playRamAlarmSound` | boolean | Play an alarm sound when a RAM alert fires |
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  AI analysis features require a valid API key for your chosen provider. Without a key, spike events will still be detected and logged, but the `aiAnalysis` field will show an error rather than a root-cause explanation.
+</Warning>
+
+## Supported AI providers
+
+NibrasShell's `ai/main.py` gateway supports the following providers out of the box:
+
+- **Gemini** — Google's Gemini models (use `ai/list-gemini.py` to fetch available model names)
+- **OpenRouter** — Access to a wide range of hosted models via a single API key
+- **OpenAI** — GPT models via the OpenAI API
+- **DeepSeek** — DeepSeek models via the DeepSeek API
+- **Ollama** — Locally hosted models with no API key required
+- **Local** — A generic local provider for custom endpoints
+
+<Tip>
+  For system spike analysis, prefer a fast model with a low time-to-first-token. Spike events are time-sensitive, and a slow model will leave the event card in the "Analyzing..." state for longer than necessary.
+</Tip>

@@ -1,0 +1,186 @@
+---
+title: "Install NibrasShell on Linux"
+description: "Install NibrasShell on Arch, Fedora, or Void Linux using the automated Python installer, or follow the manual steps to set it up on any distribution."
+---
+
+NibrasShell requires a Hyprland-based Wayland session and a few system-level dependencies before the shell can run. The automated installer — `nibras_installer/main.py` — handles dependency installation, file copying, theme extraction, font setup, and initial configuration in a single interactive script. It supports Arch Linux (and Arch-based distributions via `yay`), Fedora (and Nobara), and Void Linux out of the box. If you are on another distribution, you can follow the manual installation steps below.
+
+## System requirements
+
+Before installing, make sure your system meets these requirements:
+
+- **Hyprland** — Wayland compositor and window manager
+- **Quickshell** — QML shell framework (installed by the script on supported distros)
+- **Python 3.13** — Required for the installer and background scripts
+- **yay** — AUR helper (Arch only; must be installed before running the script)
+- A working **Wayland session** — X11 is not supported
+- **Git** — To clone the repository
+
+<Info>
+  The installer must **not** be run as root or with `sudo`. Run it as your normal user account.
+</Info>
+
+## Automated installation
+
+The recommended way to install NibrasShell is with the interactive installer. It guides you through dependency installation, file setup, and initial configuration.
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone NibrasShell using a shallow clone to keep download size small:
+
+    ```bash
+    git clone --depth 1 https://github.com/AhmedSaadi0/NibrasShell.git
+    ```
+  </Step>
+
+  <Step title="Navigate to the installer directory">
+    Move into the `nibras_installer` directory, which contains `main.py`:
+
+    ```bash
+    cd NibrasShell/nibras_installer
+    ```
+  </Step>
+
+  <Step title="Run the installer">
+    Launch the interactive installer script:
+
+    ```bash
+    python main.py
+    ```
+
+    The script will ask you to choose a language (English, Arabic, or Czech), then present a menu with the following options:
+
+    1. **Install Dependencies** — Installs all required system packages for your distribution
+    2. **Install NibrasShell** — Copies config files, extracts themes, installs fonts, and creates `~/.nibrasshell.json`
+    3. **Update Quickshell** — Pulls the latest changes and re-copies the Quickshell config files
+    4. **Uninstall NibrasShell** — Removes the shell and optionally restores a backup
+    5. **Create/Edit User Config** — Re-runs the configuration wizard to regenerate `~/.nibrasshell.json`
+
+    Run options **1** and then **2** on a fresh install.
+  </Step>
+</Steps>
+
+<Warning>
+  Reboot your system after installation completes. Some components — including font changes and Plasma color integration — require a full restart to take effect.
+</Warning>
+
+## Distro-specific notes
+
+The installer detects your distribution automatically and uses the appropriate package manager. All three supported distributions use the same script — `nibras_installer/main.py`.
+
+<Tabs>
+  <Tab title="Arch Linux">
+    The installer uses `yay` to install packages from both the official repositories and the AUR. Make sure `yay` is installed before running the script.
+
+    Key packages installed include: `quickshell`, `hyprland`, `brightnessctl`, `konsole`, `dolphin`, `playerctl`, `polkit-kde-agent`, `kde-material-you-colors`, `plasma5support`, `fish`, `python`, `python313`, and several others.
+
+    Optional packages (installed when you choose **Install All Dependencies**) include: `strawberry`, `easyeffects`, `blueman`, `telegram-desktop`, `discord`, `kvantum`, and `firefox`.
+
+    ```bash
+    # Ensure yay is available before running
+    which yay
+    ```
+  </Tab>
+
+  <Tab title="Fedora">
+    The installer enables the RPM Fusion (free and nonfree) and COPR repositories for Hyprland and Quickshell before installing packages with `dnf`.
+
+    Key packages installed include: `hyprland`, `quickshell`, `plasma-nm`, `playerctl`, `polkit-kde`, `dolphin`, `konsole`, `brightnessctl`, `gammastep`, `wl-clipboard`, `cliphist`, `sysstat`, `fish`, `python3.13`, and others.
+
+    If `dnf` encounters dependency conflicts, the installer will prompt you to allow erasing conflicting packages (`--allowerasing`) or skip broken packages (`--skip-broken`).
+
+    <Note>
+      Nobara Linux is detected as Fedora-based and uses the same installation path.
+    </Note>
+  </Tab>
+
+  <Tab title="Void Linux">
+    The installer adds a community extra repository before installing packages with `xbps-install`.
+
+    Key packages installed include: `hyprland`, `quickshell`, `plasma-nm`, `playerctl`, `polkit-kde-agent`, `dolphin`, `konsole`, `brightnessctl`, `gammastep`, `wl-clipboard`, `sysstat`, `fish-shell`, `python3-devel`, `dbus-devel`, and others.
+
+    ```bash
+    # The installer adds the void-extra repository automatically:
+    # https://github.com/Encoded14/void-extra
+    ```
+  </Tab>
+</Tabs>
+
+## What the installer does
+
+When you run option **2** (Install NibrasShell), the script performs these steps automatically:
+
+1. Backs up your existing `~/.config/hypr`, `~/.config/quickshell`, and `~/.config/easyeffects` directories to `~/.config/nibrasshell_backups/`
+2. Copies Hyprland config files to `~/.config/hypr`
+3. Copies Quickshell config files to `~/.config/quickshell`
+4. Copies EasyEffects presets to `~/.config/easyeffects`
+5. Copies the Fish shell config to `~/.config/fish/config.fish`
+6. Extracts GTK themes to `~/.themes`, icon packs to `~/.local/share/icons`, and Kvantum themes to `~/.config/Kvantum`
+7. Installs custom fonts (JF Flat, FantasqueSansM Nerd Font) to `~/.fonts`
+8. Applies Plasma font settings via `kwriteconfig6`
+9. Runs the configuration wizard to create `~/.nibrasshell.json`
+
+## Manual installation
+
+If you are on a distribution not supported by the installer, you can set up NibrasShell manually.
+
+<Steps>
+  <Step title="Install dependencies">
+    Install the following packages using your distribution's package manager:
+
+    - `hyprland`
+    - `quickshell`
+    - `playerctl`
+    - `polkit-kde-agent` (or equivalent)
+    - `brightnessctl`
+    - `wl-clipboard`
+    - `cliphist`
+    - `fish` (shell)
+    - `python3` (3.13 recommended)
+    - `jq`
+    - `sysstat`
+    - `gammastep`
+    - `konsole` and `dolphin` (KDE terminal and file manager)
+  </Step>
+
+  <Step title="Clone and copy config files">
+    ```bash
+    git clone --depth 1 https://github.com/AhmedSaadi0/NibrasShell.git
+    cd NibrasShell
+    ```
+
+    Copy the configuration directories to their destinations:
+
+    ```bash
+    cp -r config/quickshell ~/.config/quickshell
+    cp -r config/hypr ~/.config/hypr
+    cp -r config/easyeffects ~/.config/easyeffects
+    cp config/config.fish ~/.config/fish/config.fish
+    ```
+  </Step>
+
+  <Step title="Install themes and fonts">
+    Extract GTK themes, icon packs, and install fonts:
+
+    ```bash
+    mkdir -p ~/.themes ~/.local/share/icons ~/.fonts
+    # Extract archives from config/gtk-themes to ~/.themes
+    # Extract archives from config/icons to ~/.local/share/icons
+    # Copy fonts from config/.fonts to ~/.fonts
+    ```
+  </Step>
+
+  <Step title="Create the user config file">
+    Run the alternative installer script from the repository root to generate `~/.nibrasshell.json`:
+
+    ```bash
+    python install.py
+    ```
+
+    Then select option **5** (Create/Edit User Config) from the menu.
+  </Step>
+</Steps>
+
+<Tip>
+  After a manual install, you can use `install.py` from the repository root as an alternative to `nibras_installer/main.py`. Both scripts share the same menu structure and configuration wizard.
+</Tip>

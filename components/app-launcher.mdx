@@ -1,0 +1,56 @@
+---
+title: "App Launcher: search and launch apps"
+description: "Configure NibrasShell's app launcher — choose between the in-panel view or the bottom launcher overlay, set its width, and use special commands."
+keywords: ["app launcher", "bottom launcher", "search", "applications", "NibrasShell"]
+---
+
+NibrasShell gives you two ways to search for and launch applications. The first is the **in-panel launcher** inside the LeftWindow, accessible by clicking the **All Apps** icon at the bottom of the LeftBar. The second is the **Bottom Launcher** — an optional full-width overlay that rises from the bottom of the screen and provides a larger, more keyboard-friendly search experience. Both launchers share the same search engine and support special commands prefixed with `>`.
+
+## In-panel launcher
+
+By default, clicking **All Apps** in the LeftBar opens the app launcher inside the LeftWindow side panel alongside the other sections (Dashboard, Notifications, etc.). You can browse categories or type to filter applications instantly.
+
+## Bottom Launcher
+
+The Bottom Launcher is an alternative that replaces the in-panel view with a floating overlay anchored to the bottom of the screen. Enable it in your config:
+
+```json
+{
+  "useBottomLauncher": true,
+  "bottomLauncherWidth": 700
+}
+```
+
+| Config key | Type | Description |
+|---|---|---|
+| `useBottomLauncher` | `bool` | When `true`, the **All Apps** button opens the bottom overlay instead of the side panel. |
+| `bottomLauncherWidth` | `int` | Width of the bottom launcher overlay in pixels. |
+
+When `useBottomLauncher` is `true`, the `BottomLauncher` panel is toggled via the `TOGGLE_BOTTOM_LAUNCHER` event. You can also trigger it from a Hyprland keybinding using the `toggleBottomLauncher` IPC function.
+
+### Keyboard shortcut
+
+Bind the app launcher to a key in your Hyprland config using the Quickshell IPC pattern from `binding.conf`:
+
+```bash
+bindd = $mainMod, r, Show application launcher, exec, quickshell ipc call LeftBar toggleApplauncherMenu
+```
+
+## Special commands
+
+Type `>` at the start of your query to run a built-in command instead of searching apps:
+
+| Command | Action |
+|---|---|
+| `> settings` | Opens the NibrasShell Settings App. |
+| `> next` | Switches to the next wallpaper in the current rotation. |
+| `> prev` | Switches to the previous wallpaper. |
+| `> wallpapers` | Opens the wallpaper picker interface. |
+
+<Tip>
+  The `>` prefix is inspired by VS Code's command palette. You can type partial command names — the launcher filters and shows matching commands as you type.
+</Tip>
+
+## Enabling and disabling via Settings App
+
+You can also toggle between the in-panel and bottom launcher without editing config files directly. Open the **Settings App** (via `> settings` or the Dashboard panel), navigate to the **App Launcher** section, and switch the **Use bottom launcher** toggle. The change takes effect immediately without restarting the shell.

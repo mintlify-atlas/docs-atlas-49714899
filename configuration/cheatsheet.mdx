@@ -1,0 +1,53 @@
+---
+title: "Cheatsheet overlay: view all active shortcuts in-shell"
+description: "The NibrasShell Cheatsheet overlay reads your live Hyprland bindings and displays them grouped by modifier key — no memorization required."
+keywords: ["cheatsheet", "shortcuts overlay", "Hyprland bindings", "keybindings reference", "openCheatsheet"]
+---
+
+The **Cheatsheet** overlay displays all active keybindings configured in Hyprland, organized by modifier key, in a full-screen panel directly on your desktop. You never need to open a text editor or remember key combinations from memory — just open the Cheatsheet and everything is in front of you.
+
+## Opening the Cheatsheet
+
+Trigger the `openCheatsheet` action from your Hyprland config to open the overlay. For example, if you have bound it to **Super+/**, pressing that combination will show the panel instantly.
+
+<Tip>
+  If you haven't assigned a key to `openCheatsheet` yet, see [Keyboard shortcuts and key bindings](/configuration/shortcuts) for instructions on adding a bind entry to your `hyprland.conf`.
+</Tip>
+
+## What the Cheatsheet shows
+
+When you open the Cheatsheet, NibrasShell runs `hyprctl binds -j` in the background to fetch your current Hyprland binding list at runtime. The results are then:
+
+1. **Parsed** — each binding's key, modifier mask, and dispatcher command are extracted.
+2. **Grouped** — bindings are organized into sections by their modifier key combination (e.g. **Super**, **Super+Shift**, **Super+Ctrl**).
+3. **Displayed** — each section appears as a labeled panel so you can scan quickly.
+
+Because the Cheatsheet reads live from Hyprland, it always reflects the exact bindings that are active right now — including any changes you've made since the last reload.
+
+<Note>
+  The Cheatsheet does not add new keybindings. It only mirrors what is already defined in your Hyprland configuration.
+</Note>
+
+## Customizing your keybindings
+
+All key assignments are managed in your `hyprland.conf`. To change a shortcut:
+
+<Steps>
+  <Step title="Open your Hyprland config">
+    Open `~/.config/hypr/hyprland.conf` in your editor of choice.
+  </Step>
+  <Step title="Find the relevant bind entry">
+    Search for the NibrasShell action name (e.g. `openSettings`, `toggleMediaIsland`).
+  </Step>
+  <Step title="Update the key combination">
+    Change the modifier and key fields to your preferred combination and save the file.
+  </Step>
+  <Step title="Reload Hyprland">
+    Run `hyprctl reload` or use your Hyprland reload binding to apply the change immediately.
+  </Step>
+  <Step title="Verify in the Cheatsheet">
+    Open the Cheatsheet overlay — your updated binding will appear in its grouped section.
+  </Step>
+</Steps>
+
+For a full list of NibrasShell action names you can bind, see [Keyboard shortcuts and key bindings](/configuration/shortcuts).
